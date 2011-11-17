@@ -106,15 +106,15 @@ Fluent::Logger - A structured event logger for Fluent
 
 =head1 SYNOPSIS
 
-  use Fluent::Logger;
-  
-  my $logger = Fluent::Logger->new(host => '127.0.0.1', port => 24224);
-  $logger->post("myapp.access", { "agent" => "foo" });
-  # output: myapp.access {"agent":"foo"}
-  
-  my $logger = Fluent::Logger->new(tag_prefix => 'myapp', host => '127.0.0.1', port => 24224);
-  $logger->post("access", { "agent" => "foo" });
-  # output: myapp.access {"agent":"foo"}
+    use Fluent::Logger;
+    
+    my $logger = Fluent::Logger->new(host => '127.0.0.1', port => 24224);
+    $logger->post("myapp.access", { "agent" => "foo" });
+    # output: myapp.access {"agent":"foo"}
+    
+    my $logger = Fluent::Logger->new(tag_prefix => 'myapp', host => '127.0.0.1', port => 24224);
+    $logger->post("access", { "agent" => "foo" });
+    # output: myapp.access {"agent":"foo"}
 
 =head1 WARNING
 
@@ -151,10 +151,10 @@ create new logger instance.
 
 %args:
 
-  tag_prefix  => 'Str': optional
-  host        => 'Str': default is '127.0.0.1'
-  port        => 'Int': default is 24224
-  timeout     => 'Num': default is 3.0
+    tag_prefix  => 'Str': optional
+    host        => 'Str': default is '127.0.0.1'
+    port        => 'Int': default is 24224
+    timeout     => 'Num': default is 3.0
 
 =item B<post>($tag:Str, $msg:HashRef)
 
@@ -171,7 +171,7 @@ HIROSE Masaaki E<lt>hirose31 _at_ gmail.comE<gt>
 
 L<https://github.com/hirose31/fluent-logger-perl>
 
-  git clone git://github.com/hirose31/fluent-logger-perl.git
+    git clone git://github.com/hirose31/fluent-logger-perl.git
 
 patches and collaborators are welcome.
 
