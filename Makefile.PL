@@ -8,8 +8,6 @@ license  'perl';
 auto_set_repository;
 repository 'https://github.com/hirose31/fluent-logger-perl';
 
-configure_requires 'ExtUtils::MakeMaker' => 6.42;
-
 requires 'Smart::Args';
 requires 'Data::MessagePack';
 
