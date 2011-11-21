@@ -17,6 +17,8 @@ sub new {
          my $port         => { isa => 'Int', default => 24224 } ,
          my $timeout      => { isa => 'Num', default => 3.0 },
          my $buffer_limit => { isa => 'Int', default => 8*1024*1024 }, # fixme
+         my $max_write_retry => { isa => 'Int', default => 5},
+         my $write_length    => { isa => 'Int', default => 8*1024*1024},
         );
 
     my $self = bless {
@@ -58,19 +60,29 @@ sub close {
 
 sub post {
     my($self, $tag, $msg) = @_;
-    $self->_post(tag => $tag||"", msg => $msg);
+
+    $self->_post(tag => $tag||"", msg => $msg, time => time());
+}
+
+sub post_with_time {
+    my ($self, $tag, $msg, $time) = @_;
+
+    $self->_post(tag => $tag||"", msg => $msg, time => $time);
 }
 
 sub _post {
     args(my $self,
-         my $tag => { isa => 'Str', default => "" },
-         my $msg => { isa => 'HashRef' },
+         my $tag  => { isa => 'Str', default => "" },
+         my $msg  => { isa => 'HashRef' },
+         my $time => { isa => 'Int'},
     );
+
+    $self->_connect unless $self->{socket};
 
     $tag = join('.', $self->{tag_prefix}, $tag) if $self->{tag_prefix};
     my $data = $self->_make_data(
         tag  => $tag,
-        time => time(),
+        time => $time,
         msg  => $msg,
        );
 
@@ -92,7 +104,23 @@ sub _send {
          my $data => 'Value',
     );
 
-    $self->{socket}->send($data);
+    my $length = length($data);
+    my $retry = my $written = 0;
+
+    while ($written < $length) {
+        my $nwrite
+            = $self->{socket}->syswrite($data, $self->{write_length}, $written);
+
+        unless ($nwrite) {
+            if ($retry > $self->{max_write_retry}) {
+                die 'failed write retry; max write retry count';
+            }
+            $retry++;
+        }
+        $written += $nwrite;
+    }
+
+    return $written;
 }
 
 1;
@@ -160,6 +188,13 @@ create new logger instance.
 
 send message to fluent server with tag.
 
+=item B<post_with_time>($tag:Str, $msg:HashRef, $time:Int)
+
+send message to fluent server with tag and time.
+
+=item B<close>()
+
+close connection.
 
 =back
 
@@ -187,4 +222,3 @@ This library is free software; you can redistribute it and/or modify
 it under the same terms as Perl itself.
 
 =cut
-
