@@ -8,14 +8,15 @@ license  'perl';
 auto_set_repository;
 repository 'https://github.com/hirose31/fluent-logger-perl';
 
+configure_requires 'ExtUtils::MakeMaker' => 6.42;
+
 requires 'Smart::Args';
 requires 'Data::MessagePack';
 
 test_requires 'Test::More' => 0.88;
+test_requires 'Test::TCP'  => 1.13;
 
 tests_recursive;
 author_tests 'xt';
 
-use_test_base;
 WriteAll;
-
