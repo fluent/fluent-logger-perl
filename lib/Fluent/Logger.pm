@@ -64,7 +64,8 @@ sub _connect {
 sub close {
     args(my $self);
 
-    $self->{socket}->close if $self->{socket};
+    my $socket = delete $self->{socket};
+    $socket->close if $socket;
 }
 
 sub post {
