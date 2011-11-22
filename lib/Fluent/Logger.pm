@@ -40,7 +40,7 @@ sub new {
 }
 
 sub _connect {
-    args(my $self);
+    my $self = shift;
 
     return if $self->{socket_io};
 
@@ -62,7 +62,7 @@ sub _connect {
 }
 
 sub close {
-    args(my $self);
+    my $self = shift;
 
     my $socket = delete $self->{socket_io};
     $socket->close if $socket;
@@ -90,29 +90,19 @@ sub _post {
     $self->_connect unless $self->{socket_io};
 
     $tag = join('.', $self->{tag_prefix}, $tag) if $self->{tag_prefix};
-    my $data = $self->_make_data(
-        tag  => $tag,
-        time => $time,
-        msg  => $msg,
-       );
+    my $data = $self->_make_data($tag, $msg, $time);
 
-    $self->_send(data => $data);
+    $self->_send($data);
 }
 
 sub _make_data {
-    args(my $self,
-         my $tag  => 'Str',
-         my $time => 'Int',
-         my $msg  => 'HashRef',
-    );
+    my ($self, $tag, $msg, $time) = @_;
 
     return $self->{packer}->pack([$tag, $time, $msg]);
 }
 
 sub _send {
-    args(my $self,
-         my $data => 'Value',
-    );
+    my ($self, $data) = @_;
 
     my $length = length($data);
     my $retry = my $written = 0;
@@ -193,7 +183,7 @@ create new logger instance.
     host        => 'Str': default is '127.0.0.1'
     port        => 'Int': default is 24224
     timeout     => 'Num': default is 3.0
-    unix_socket => 'Str': default undef (e.g. "/var/run/fluent/fluent.sock")
+    socket      => 'Str': default undef (e.g. "/var/run/fluent/fluent.sock")
 
 =item B<post>($tag:Str, $msg:HashRef)
 
