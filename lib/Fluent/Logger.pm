@@ -8,6 +8,7 @@ our $VERSION = '0.01_01';
 
 use Smart::Args;
 use IO::Socket::INET;
+use IO::Socket::UNIX;
 use Data::MessagePack;
 
 sub new {
@@ -15,6 +16,7 @@ sub new {
          my $tag_prefix   => { isa => 'Str', optional => 1 },
          my $host         => { isa => 'Str', default => '127.0.0.1' },
          my $port         => { isa => 'Int', default => 24224 } ,
+         my $unix_socket  => { isa => 'Str', default => undef },
          my $timeout      => { isa => 'Num', default => 3.0 },
          my $buffer_limit => { isa => 'Int', default => 8*1024*1024 }, # fixme
          my $max_write_retry => { isa => 'Int', default => 5},
@@ -25,6 +27,7 @@ sub new {
         tag_prefix   => $tag_prefix,
         host         => $host,
         port         => $port,
+        unix_socket  => $unix_socket,
         timeout      => $timeout,
         buffer_limit => $buffer_limit,
         socket       => undef,
@@ -41,14 +44,20 @@ sub _connect {
 
     return if $self->{socket};
 
-    $self->{socket} = IO::Socket::INET->new(
-        PeerAddr  => $self->{host},
-        PeerPort  => $self->{port},
-        Proto     => 'tcp',
-        Timeout   => $self->{timeout},
-        ReuseAddr => 1,
-       ) or die $!;
-
+    if ( defined $self->{unix_socket} ) {
+        $self->{socket} = IO::Socket::UNIX->new(
+            Peer => $self->{unix_socket},
+        ) or die $!;
+    }
+    else {
+        $self->{socket} = IO::Socket::INET->new(
+            PeerAddr  => $self->{host},
+            PeerPort  => $self->{port},
+            Proto     => 'tcp',
+            Timeout   => $self->{timeout},
+            ReuseAddr => 1,
+        ) or die $!;
+    }
     return 1;
 }
 
@@ -183,6 +192,7 @@ create new logger instance.
     host        => 'Str': default is '127.0.0.1'
     port        => 'Int': default is 24224
     timeout     => 'Num': default is 3.0
+    unix_socket => 'Str': default undef (e.g. "/var/run/fluent/fluent.sock")
 
 =item B<post>($tag:Str, $msg:HashRef)
 
