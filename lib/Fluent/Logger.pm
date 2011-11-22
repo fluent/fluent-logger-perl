@@ -16,7 +16,7 @@ sub new {
          my $tag_prefix   => { isa => 'Str', optional => 1 },
          my $host         => { isa => 'Str', default => '127.0.0.1' },
          my $port         => { isa => 'Int', default => 24224 } ,
-         my $unix_socket  => { isa => 'Str', default => undef },
+         my $socket       => { isa => 'Str', default => undef },
          my $timeout      => { isa => 'Num', default => 3.0 },
          my $buffer_limit => { isa => 'Int', default => 8*1024*1024 }, # fixme
          my $max_write_retry => { isa => 'Int', default => 5},
@@ -27,10 +27,10 @@ sub new {
         tag_prefix   => $tag_prefix,
         host         => $host,
         port         => $port,
-        unix_socket  => $unix_socket,
+        socket       => $socket,
         timeout      => $timeout,
         buffer_limit => $buffer_limit,
-        socket       => undef,
+        socket_io    => undef,
         packer       => Data::MessagePack->new,
        }, $class;
 
@@ -42,15 +42,15 @@ sub new {
 sub _connect {
     args(my $self);
 
-    return if $self->{socket};
+    return if $self->{socket_io};
 
-    if ( defined $self->{unix_socket} ) {
-        $self->{socket} = IO::Socket::UNIX->new(
-            Peer => $self->{unix_socket},
+    if ( defined $self->{socket} ) {
+        $self->{socket_io} = IO::Socket::UNIX->new(
+            Peer => $self->{socket},
         ) or die $!;
     }
     else {
-        $self->{socket} = IO::Socket::INET->new(
+        $self->{socket_io} = IO::Socket::INET->new(
             PeerAddr  => $self->{host},
             PeerPort  => $self->{port},
             Proto     => 'tcp',
@@ -64,7 +64,7 @@ sub _connect {
 sub close {
     args(my $self);
 
-    my $socket = delete $self->{socket};
+    my $socket = delete $self->{socket_io};
     $socket->close if $socket;
 }
 
@@ -87,7 +87,7 @@ sub _post {
          my $time => { isa => 'Int'},
     );
 
-    $self->_connect unless $self->{socket};
+    $self->_connect unless $self->{socket_io};
 
     $tag = join('.', $self->{tag_prefix}, $tag) if $self->{tag_prefix};
     my $data = $self->_make_data(
@@ -119,7 +119,7 @@ sub _send {
 
     while ($written < $length) {
         my $nwrite
-            = $self->{socket}->syswrite($data, $self->{write_length}, $written);
+            = $self->{socket_io}->syswrite($data, $self->{write_length}, $written);
 
         unless ($nwrite) {
             if ($retry > $self->{max_write_retry}) {

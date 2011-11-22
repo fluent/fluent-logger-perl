@@ -15,7 +15,7 @@ my $pid = fork();
 if ($pid == 0) {
     Test::SharedFork->child;
     sleep 1;
-    my $logger = Fluent::Logger->new( unix_socket => $sock );
+    my $logger = Fluent::Logger->new( socket => $sock );
     isa_ok $logger, "Fluent::Logger";
     ok $logger->post("test.debug" => { foo => "bar" });
     ok $logger->close;
@@ -37,5 +37,3 @@ elsif (defined $pid) {
     }
     done_testing;
 };
-
-
