@@ -8,8 +8,8 @@ license  'perl';
 auto_set_repository;
 repository 'https://github.com/hirose31/fluent-logger-perl';
 
-requires 'Smart::Args';
 requires 'Data::MessagePack';
+requires 'Mouse';
 
 test_requires 'Test::More' => 0.88;
 test_requires 'Test::TCP'  => 1.13;
