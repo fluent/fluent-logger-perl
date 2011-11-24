@@ -69,7 +69,29 @@ has packer => (
     default => "Data::MessagePack",
 );
 
+has errors => (
+    is      => "rw",
+    isa     => "ArrayRef",
+    default => sub { [] },
+);
+
 no Mouse;
+
+sub BUILD {
+    my $self = shift;
+    $self->_connect;
+}
+
+sub _add_error {
+    my $self = shift;
+    my $msg  = shift;
+    push @{ $self->errors }, $msg;
+}
+
+sub errstr {
+    my $self = shift;
+    return join ("\n", @{ $self->errors });
+}
 
 sub _connect {
     my $self = shift;
@@ -85,7 +107,10 @@ sub _connect {
                  Timeout   => $self->timeout,
                  ReuseAddr => 1,
              );
-    die $! unless $sock;
+    if (!$sock) {
+        $self->_add_error($!);
+        return;
+    }
     $self->socket_io($sock);
 }
 
@@ -110,10 +135,14 @@ sub post_with_time {
 
 sub _post {
     my ($self, $tag, $msg, $time) = @_;
-    die "message must be HASHREF"
-        if ref $msg ne "HASH";
 
-    $self->_connect unless $self->socket_io;
+    if (ref $msg ne "HASH") {
+        $self->_add_error("message must be HASHREF");
+        return;
+    }
+
+    $self->_connect or return
+        unless $self->socket_io;
 
     $tag = join('.', $self->tag_prefix, $tag) if $self->tag_prefix;
     my $data = $self->_make_data($tag, $msg, $time);
@@ -133,17 +162,28 @@ sub _send {
     my $length = length($data);
     my $retry = my $written = 0;
 
-    while ($written < $length) {
-        my $nwrite
-            = $self->socket_io->syswrite($data, $self->write_length, $written);
+    local $SIG{"PIPE"} = sub {
+        $self->close;
+        die $!;
+    };
 
-        unless ($nwrite) {
-            if ($retry > $self->max_write_retry) {
-                die 'failed write retry; max write retry count';
+    eval {
+        while ($written < $length) {
+            my $nwrite
+                = $self->socket_io->syswrite($data, $self->write_length, $written);
+
+            unless ($nwrite) {
+                if ($retry > $self->max_write_retry) {
+                    die 'failed write retry; max write retry count';
+                }
+                $retry++;
             }
-            $retry++;
+            $written += $nwrite;
         }
-        $written += $nwrite;
+    };
+    if ($@) {
+        $self->_add_error($@);
+        return;
     }
 
     return $written;
@@ -222,6 +262,13 @@ send message to fluent server with tag and time.
 =item B<close>()
 
 close connection.
+
+=item B<errstr>
+
+return error message.
+
+  $logger->post( info => { "msg": "test" } )
+      or die $logger->errstr;
 
 =back
 

@@ -5,6 +5,8 @@ use Test::TCP;
 use Time::Piece;
 use t::Util qw/ run_fluentd /;
 
+$ENV{LANG} = "C";
+
 my ($server, $dir) = run_fluentd();
 my $port = $server->port;
 
@@ -27,6 +29,27 @@ subtest tcp => sub {
     note $log;
     like $log => qr{$tag\t\{"foo":"bar"\}}, "match post log";
     like $log => qr{\Q$time_str\E\t$tag\t\{"FOO":"BAR"\}}, "match post_with_time log";
+};
+
+subtest error => sub {
+    my $logger = Fluent::Logger->new( port => $port );
+    ok $logger->post( "test.error" => { foo => "bar" } );
+
+    undef $server; # shutdown server.
+    sleep 1;
+
+    my $r;
+    $r = $logger->post( "test.error" => "foo" );
+    is $r => undef;
+    like $logger->errstr => qr/HASHREF/;
+
+    $r = $logger->post( "test.error" => { "foo" => "error?" } );
+    is $r => undef;
+    like $logger->errstr => qr/Broken pipe/;
+
+    $r = $logger->post( "test.error" => { "foo" => "error?" } );
+    is $r => undef;
+    like $logger->errstr => qr/Connection refused/;
 };
 
 done_testing;
