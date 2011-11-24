@@ -33,7 +33,7 @@ sub run_fluentd {
   type forward
   port ${port}
 </source>
-<match test.tcp>
+<match test.*>
   type file
   path ${dir}/tcp.log
 </match>
