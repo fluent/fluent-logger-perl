@@ -14,6 +14,7 @@ requires 'Data::MessagePack';
 test_requires 'Test::More' => 0.88;
 test_requires 'Test::TCP'  => 1.13;
 test_requires 'Test::SharedFork';
+test_requires 'Time::Piece';
 
 tests_recursive;
 author_tests 'xt';
