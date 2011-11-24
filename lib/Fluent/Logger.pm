@@ -3,62 +3,90 @@ package Fluent::Logger;
 
 use strict;
 use warnings;
+use Mouse;
 
 our $VERSION = '0.01_01';
 
-use Smart::Args;
 use IO::Socket::INET;
 use IO::Socket::UNIX;
 use Data::MessagePack;
 
-sub new {
-    args(my $class,
-         my $tag_prefix   => { isa => 'Str', optional => 1 },
-         my $host         => { isa => 'Str', default => '127.0.0.1' },
-         my $port         => { isa => 'Int', default => 24224 } ,
-         my $socket       => { isa => 'Str', default => undef },
-         my $timeout      => { isa => 'Num', default => 3.0 },
-         my $buffer_limit => { isa => 'Int', default => 8*1024*1024 }, # fixme
-         my $max_write_retry => { isa => 'Int', default => 5},
-         my $write_length    => { isa => 'Int', default => 8*1024*1024},
-        );
+has tag_prefix => (
+    is  => "rw",
+    isa => "Str",
+);
 
-    my $self = bless {
-        tag_prefix   => $tag_prefix,
-        host         => $host,
-        port         => $port,
-        socket       => $socket,
-        timeout      => $timeout,
-        buffer_limit => $buffer_limit,
-        socket_io    => undef,
-        packer       => Data::MessagePack->new,
-       }, $class;
+has host => (
+    is      => "rw",
+    isa     => "Str",
+    default => "127.0.0.1",
+);
 
-    $self->_connect;
+has port => (
+    is      => "rw",
+    isa     => "Int",
+    default => 24224,
+);
 
-    return $self;
-}
+has socket => (
+    is       => "rw",
+    isa      => "Str",
+    required => 0,
+);
+
+has timeout => (
+    is      => "rw",
+    isa     => 'Num',
+    default => 3.0,
+);
+
+has buffer_limit => (
+    is      => "rw",
+    isa     => 'Int',
+    default => 8 * 1024 * 1024, # fixme
+);
+
+has max_write_retry => (
+    is      => "rw",
+    isa     => 'Int',
+    default => 5,
+);
+
+has write_length => (
+    is  => "rw",
+    isa => 'Int',
+    default => 8 * 1024 * 1024,
+);
+
+has socket_io => (
+    is  => "rw",
+    isa => "IO::Socket",
+);
+
+has packer => (
+    is      => "ro",
+    isa     => "Str",
+    default => "Data::MessagePack",
+);
+
+no Mouse;
 
 sub _connect {
     my $self = shift;
 
-    return if $self->{socket_io};
+    return if $self->socket_io;
 
-    if ( defined $self->{socket} ) {
-        $self->{socket_io} = IO::Socket::UNIX->new(
-            Peer => $self->{socket},
-        ) or die $!;
-    }
-    else {
-        $self->{socket_io} = IO::Socket::INET->new(
-            PeerAddr  => $self->{host},
-            PeerPort  => $self->{port},
-            Proto     => 'tcp',
-            Timeout   => $self->{timeout},
-            ReuseAddr => 1,
-        ) or die $!;
-    }
-    return 1;
+    my $sock = defined $self->socket
+             ? IO::Socket::UNIX->new( Peer => $self->socket )
+             : IO::Socket::INET->new(
+                 PeerAddr  => $self->host,
+                 PeerPort  => $self->port,
+                 Proto     => 'tcp',
+                 Timeout   => $self->timeout,
+                 ReuseAddr => 1,
+             );
+    die $! unless $sock;
+    $self->socket_io($sock);
 }
 
 sub close {
@@ -71,25 +99,23 @@ sub close {
 sub post {
     my($self, $tag, $msg) = @_;
 
-    $self->_post(tag => $tag||"", msg => $msg, time => time());
+    $self->_post( $tag || "", $msg, time() );
 }
 
 sub post_with_time {
     my ($self, $tag, $msg, $time) = @_;
 
-    $self->_post(tag => $tag||"", msg => $msg, time => $time);
+    $self->_post( $tag || "", $msg, $time );
 }
 
 sub _post {
-    args(my $self,
-         my $tag  => { isa => 'Str', default => "" },
-         my $msg  => { isa => 'HashRef' },
-         my $time => { isa => 'Int'},
-    );
+    my ($self, $tag, $msg, $time) = @_;
+    die "message must be HASHREF"
+        if ref $msg ne "HASH";
 
-    $self->_connect unless $self->{socket_io};
+    $self->_connect unless $self->socket_io;
 
-    $tag = join('.', $self->{tag_prefix}, $tag) if $self->{tag_prefix};
+    $tag = join('.', $self->tag_prefix, $tag) if $self->tag_prefix;
     my $data = $self->_make_data($tag, $msg, $time);
 
     $self->_send($data);
@@ -98,7 +124,7 @@ sub _post {
 sub _make_data {
     my ($self, $tag, $msg, $time) = @_;
 
-    return $self->{packer}->pack([$tag, $time, $msg]);
+    return $self->packer->pack([ "$tag", int $time, $msg ]);
 }
 
 sub _send {
@@ -109,10 +135,10 @@ sub _send {
 
     while ($written < $length) {
         my $nwrite
-            = $self->{socket_io}->syswrite($data, $self->{write_length}, $written);
+            = $self->socket_io->syswrite($data, $self->write_length, $written);
 
         unless ($nwrite) {
-            if ($retry > $self->{max_write_retry}) {
+            if ($retry > $self->max_write_retry) {
                 die 'failed write retry; max write retry count';
             }
             $retry++;
