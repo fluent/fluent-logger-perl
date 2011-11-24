@@ -63,12 +63,6 @@ has socket_io => (
     isa => "IO::Socket",
 );
 
-has packer => (
-    is      => "ro",
-    isa     => "Str",
-    default => "Data::MessagePack",
-);
-
 has errors => (
     is      => "rw",
     isa     => "ArrayRef",
@@ -145,15 +139,10 @@ sub _post {
         unless $self->socket_io;
 
     $tag = join('.', $self->tag_prefix, $tag) if $self->tag_prefix;
-    my $data = $self->_make_data($tag, $msg, $time);
 
-    $self->_send($data);
-}
-
-sub _make_data {
-    my ($self, $tag, $msg, $time) = @_;
-
-    return $self->packer->pack([ "$tag", int $time, $msg ]);
+    $self->_send(
+        Data::MessagePack->pack([ "$tag", int $time, $msg ])
+    );
 }
 
 sub _send {
