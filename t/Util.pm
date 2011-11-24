@@ -33,17 +33,9 @@ sub run_fluentd {
   type forward
   port ${port}
 </source>
-<source>
-  type unix
-  path ${dir}/fluent.sock
-</source>
 <match test.tcp>
   type file
   path ${dir}/tcp.log
-</match>
-<match test.unix>
-  type file
-  path ${dir}/unix.log
 </match>
 _END_
             exec "fluentd", "-c", "$dir/fluent.conf";
