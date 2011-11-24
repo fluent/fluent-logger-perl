@@ -4,8 +4,9 @@ use Test::More;
 use Test::TCP;
 use Time::Piece;
 use t::Util qw/ run_fluentd /;
+use POSIX qw/ setlocale LC_ALL /;
 
-$ENV{LANG} = "C";
+setlocale(LC_ALL, "C");
 
 my ($server, $dir) = run_fluentd();
 my $port = $server->port;
