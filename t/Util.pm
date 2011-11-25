@@ -19,16 +19,16 @@ sub streaming_decode_mp {
 }
 
 sub run_fluentd {
+    my $fixed_port = shift;
     if ( system("fluentd", "--version") != 0 ) {
         Test::More::plan skip_all => "fluentd is not installed.";
     }
 
     my $dir = tempdir( CLEANUP => 1 );
-    my $server = Test::TCP->new(
-        code => sub {
-            my $port = shift;
-            open my $conf, ">", "$dir/fluent.conf" or die $!;
-            print $conf <<"_END_";
+    my $code = sub {
+        my $port = shift;
+        open my $conf, ">", "$dir/fluent.conf" or die $!;
+        print $conf <<"_END_";
 <source>
   type forward
   port ${port}
@@ -38,9 +38,12 @@ sub run_fluentd {
   path ${dir}/tcp.log
 </match>
 _END_
-            exec "fluentd", "-c", "$dir/fluent.conf";
-            die $!;
-        },
+        exec "fluentd", "-c", "$dir/fluent.conf";
+        die $!;
+    };
+    my $server = Test::TCP->new(
+        code => $code,
+        $fixed_port ? ( port => $fixed_port ) : (),
     );
     return ($server, $dir);
 }

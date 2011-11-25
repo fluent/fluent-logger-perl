@@ -41,16 +41,23 @@ subtest error => sub {
 
     my $r;
     $r = $logger->post( "test.error" => "foo" );
-    is $r => undef;
+    is $r => undef, "not hash ref";
     like $logger->errstr => qr/HashRef/i;
 
     $r = $logger->post( "test.error" => { "foo" => "error?" } );
-    is $r => undef;
+    is $r => undef, "broken pipe";
     like $logger->errstr => qr/Broken pipe/i;
 
     $r = $logger->post( "test.error" => { "foo" => "error?" } );
-    is $r => undef;
+    is $r => undef, "connection refused";
     like $logger->errstr => qr/Connection refused/i;
+
+    # re start server on same port
+    ($server, $dir) = run_fluentd($port);
+    ok $logger->post( "test.error" => { foo => "bar" } ), "re connected";
 };
+
+
+
 
 done_testing;
