@@ -11,6 +11,7 @@ use IO::Socket::INET;
 use IO::Socket::UNIX;
 use Data::MessagePack;
 use Time::Piece;
+use JSON ();
 use Carp;
 
 has tag_prefix => (
@@ -151,35 +152,35 @@ sub _post {
         return;
     }
 
-    $self->_connect or return
-        unless $self->socket_io;
-
     $tag = join('.', $self->tag_prefix, $tag) if $self->tag_prefix;
+    my $data = [ "$tag", int $time, $msg ];
 
-    $self->_send(
-        Data::MessagePack->pack([ "$tag", int $time, $msg ])
-    );
+    if (! $self->socket_io) {
+        $self->_connect or do {
+            $self->_add_error("Cannot send data: " . JSON::encode_json($data));
+            return;
+        };
+    }
+
+    $self->_send($data);
 }
 
 sub _send {
     my ($self, $data) = @_;
 
-    my $length = length($data);
-    my $retry = my $written = 0;
+    my $mp     = Data::MessagePack->pack($data);
+    my $length = length($mp);
+    my $retry  = my $written = 0;
 
-    local $SIG{"PIPE"} = sub {
-        $self->close;
-        die $!;
-    };
-
+    local $SIG{"PIPE"} = sub { die $! };
     eval {
         while ($written < $length) {
             my $nwrite
-                = $self->socket_io->syswrite($data, $self->write_length, $written);
+                = $self->socket_io->syswrite($mp, $self->write_length, $written);
 
             unless ($nwrite) {
                 if ($retry > $self->max_write_retry) {
-                    die 'failed write retry; max write retry count';
+                    die "failed write retry; max write retry count. $!";
                 }
                 $retry++;
             }
@@ -187,7 +188,10 @@ sub _send {
         }
     };
     if ($@) {
-        $self->_add_error($@);
+        $self->close;
+        $self->_add_error(
+            "Cannot send data: " . JSON::encode_json($data) . " $@"
+        );
         return;
     }
 

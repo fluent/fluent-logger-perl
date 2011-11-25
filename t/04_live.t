@@ -34,27 +34,27 @@ subtest tcp => sub {
 
 subtest error => sub {
     my $logger = Fluent::Logger->new( port => $port );
-    ok $logger->post( "test.error" => { foo => "bar" } );
+    ok $logger->post( "test.error" => { foo => "ok" } );
 
     undef $server; # shutdown server.
     sleep 1;
 
     my $r;
-    $r = $logger->post( "test.error" => "foo" );
+    $r = $logger->post( "test.error" => "not hashref?" );
     is $r => undef, "not hash ref";
     like $logger->errstr => qr/HashRef/i;
 
-    $r = $logger->post( "test.error" => { "foo" => "error?" } );
+    $r = $logger->post( "test.error" => { "foo" => "broken pipe?" } );
     is $r => undef, "broken pipe";
     like $logger->errstr => qr/Broken pipe/i;
 
-    $r = $logger->post( "test.error" => { "foo" => "error?" } );
+    $r = $logger->post( "test.error" => { "foo" => "connection refused?" } );
     is $r => undef, "connection refused";
     like $logger->errstr => qr/Connection refused/i;
 
     # re start server on same port
     ($server, $dir) = run_fluentd($port);
-    ok $logger->post( "test.error" => { foo => "bar" } ), "re connected";
+    ok $logger->post( "test.error" => { foo => "ok" } ), "re connected";
 };
 
 

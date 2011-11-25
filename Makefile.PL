@@ -11,6 +11,7 @@ repository 'https://github.com/hirose31/fluent-logger-perl';
 requires 'Data::MessagePack';
 requires 'Mouse';
 requires 'Time::Piece';
+requires 'JSON';
 
 test_requires 'Test::More' => 0.88;
 test_requires 'Test::TCP'  => 1.13;
