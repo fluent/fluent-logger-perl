@@ -42,15 +42,15 @@ subtest error => sub {
     my $r;
     $r = $logger->post( "test.error" => "foo" );
     is $r => undef;
-    like $logger->errstr => qr/HASHREF/;
+    like $logger->errstr => qr/HashRef/i;
 
     $r = $logger->post( "test.error" => { "foo" => "error?" } );
     is $r => undef;
-    like $logger->errstr => qr/Broken pipe/;
+    like $logger->errstr => qr/Broken pipe/i;
 
     $r = $logger->post( "test.error" => { "foo" => "error?" } );
     is $r => undef;
-    like $logger->errstr => qr/Connection refused/;
+    like $logger->errstr => qr/Connection refused/i;
 };
 
 done_testing;

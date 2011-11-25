@@ -10,6 +10,8 @@ our $VERSION = '0.01_01';
 use IO::Socket::INET;
 use IO::Socket::UNIX;
 use Data::MessagePack;
+use Time::Piece;
+use Carp;
 
 has tag_prefix => (
     is  => "rw",
@@ -79,12 +81,26 @@ sub BUILD {
 sub _add_error {
     my $self = shift;
     my $msg  = shift;
+    chomp $msg;
+    carp (
+        sprintf "%s %s(%s): %s",
+        localtime->strftime("%Y-%m-%dT%H:%M:%S%z"),
+        ref $self,
+        $self->_connect_info,
+        $msg,
+    );
+
     push @{ $self->errors }, $msg;
 }
 
 sub errstr {
     my $self = shift;
     return join ("\n", @{ $self->errors });
+}
+
+sub _connect_info {
+    my $self = shift;
+    $self->socket || sprintf "%s:%d", $self->host, $self->port;
 }
 
 sub _connect {
@@ -131,7 +147,7 @@ sub _post {
     my ($self, $tag, $msg, $time) = @_;
 
     if (ref $msg ne "HASH") {
-        $self->_add_error("message must be HASHREF");
+        $self->_add_error("message '$msg' must be a HashRef");
         return;
     }
 
