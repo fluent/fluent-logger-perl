@@ -36,8 +36,7 @@ subtest error => sub {
     my $logger = Fluent::Logger->new( port => $port );
     ok $logger->post( "test.error" => { foo => "ok" } );
 
-    undef $server; # shutdown server.
-    sleep 1;
+    undef $server; # shutdown
 
     my $r;
     $r = $logger->post( "test.error" => "not hashref?" );
@@ -52,9 +51,14 @@ subtest error => sub {
     is $r => undef, "connection refused";
     like $logger->errstr => qr/Connection refused/i;
 
-    # re start server on same port
+    # restart server on the same port
     ($server, $dir) = run_fluentd($port);
-    ok $logger->post( "test.error" => { foo => "ok" } ), "re connected";
+    ok $logger->post( "test.error" => { foo => "reconnected?" } ), "reconnected";
+
+    undef $server;
+    ($server, $dir) = run_fluentd($port);
+
+    ok $logger->post( "test.error" => { foo => "retried?" } ), "retried";
 };
 
 

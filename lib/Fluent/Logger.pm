@@ -79,7 +79,7 @@ sub BUILD {
     $self->_connect;
 }
 
-sub _add_error {
+sub _carp {
     my $self = shift;
     my $msg  = shift;
     chomp $msg;
@@ -90,7 +90,12 @@ sub _add_error {
         $self->_connect_info,
         $msg,
     );
+}
 
+sub _add_error {
+    my $self = shift;
+    my $msg  = shift;
+    $self->_carp($msg);
     push @{ $self->errors }, $msg;
 }
 
@@ -173,26 +178,36 @@ sub _send {
     my $retry  = my $written = 0;
 
     local $SIG{"PIPE"} = sub { die $! };
-    eval {
-        while ($written < $length) {
-            my $nwrite
-                = $self->socket_io->syswrite($mp, $self->write_length, $written);
+ TRY:
+    for my $try (1, 2) {
+        eval {
+            while ($written < $length) {
+                my $nwrite
+                    = $self->socket_io->syswrite($mp, $self->write_length, $written);
 
-            unless ($nwrite) {
-                if ($retry > $self->max_write_retry) {
-                    die "failed write retry; max write retry count. $!";
+                unless ($nwrite) {
+                    if ($retry > $self->max_write_retry) {
+                        die "failed write retry; max write retry count. $!";
+                    }
+                    $retry++;
                 }
-                $retry++;
+                $written += $nwrite;
             }
-            $written += $nwrite;
+        };
+        if ($@) {
+            my $error = $@;
+            $self->close;
+            $self->_carp("Trying reconnect($try): $error");
+            $self->_connect or do {
+                $self->_add_error(
+                    "Cannot send data: " . JSON::encode_json($data) . " $error"
+                );
+                return;
+            };
+            $self->_carp("Successfully reconnected!");
+            next TRY; # retry
         }
-    };
-    if ($@) {
-        $self->close;
-        $self->_add_error(
-            "Cannot send data: " . JSON::encode_json($data) . " $@"
-        );
-        return;
+        last TRY; # ok
     }
 
     return $written;
