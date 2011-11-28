@@ -5,7 +5,7 @@ use strict;
 use warnings;
 use Mouse;
 
-our $VERSION = '0.01_01';
+our $VERSION = '0.01';
 
 use IO::Socket::INET;
 use IO::Socket::UNIX;
@@ -300,11 +300,15 @@ return error message.
 
 HIROSE Masaaki E<lt>hirose31 _at_ gmail.comE<gt>
 
+Shinichiro Sei E<lt>sei _at_ kayac.comE<gt>
+
+FUJIWARA Shunichiro E<lt>fujiwara _at_ cpan.orgE<gt>
+
 =head1 REPOSITORY
 
-L<https://github.com/hirose31/fluent-logger-perl>
+L<https://github.com/fluent/fluent-logger-perl>
 
-    git clone git://github.com/hirose31/fluent-logger-perl.git
+    git clone git://github.com/fluent/fluent-logger-perl.git
 
 patches and collaborators are welcome.
 
