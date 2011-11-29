@@ -1,5 +1,8 @@
 Revision history for Fluent::Logger
 
+0.02     2011-11-29
+  * add prefer_integer flag
+
 0.01     2011-11-28
   * First release
 
