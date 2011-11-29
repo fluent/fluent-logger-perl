@@ -72,6 +72,23 @@ has errors => (
     default => sub { [] },
 );
 
+has prefer_integer => (
+    is      => "rw",
+    isa     => "Bool",
+    default => 1,
+);
+
+has packer => (
+    is      => "rw",
+    isa     => "Data::MessagePack",
+    default => sub {
+        my $self = shift;
+        my $mp   = Data::MessagePack->new;
+        $mp->prefer_integer( $self->prefer_integer );
+        $mp;
+    },
+);
+
 no Mouse;
 
 sub BUILD {
@@ -173,8 +190,9 @@ sub _post {
 sub _send {
     my ($self, $data) = @_;
 
-    my $mp     = Data::MessagePack->pack($data);
-    my $length = length($mp);
+    $self->packer->prefer_integer( $self->prefer_integer );
+    my $mpdata = $self->packer->pack($data);
+    my $length = length($mpdata);
     my $retry  = my $written = 0;
 
     local $SIG{"PIPE"} = sub { die $! };
@@ -183,7 +201,7 @@ sub _send {
         eval {
             while ($written < $length) {
                 my $nwrite
-                    = $self->socket_io->syswrite($mp, $self->write_length, $written);
+                    = $self->socket_io->syswrite($mpdata, $self->write_length, $written);
 
                 unless ($nwrite) {
                     if ($retry > $self->max_write_retry) {
@@ -269,11 +287,12 @@ create new logger instance.
 
 %args:
 
-    tag_prefix  => 'Str': optional
-    host        => 'Str': default is '127.0.0.1'
-    port        => 'Int': default is 24224
-    timeout     => 'Num': default is 3.0
-    socket      => 'Str': default undef (e.g. "/var/run/fluent/fluent.sock")
+    tag_prefix     => 'Str':  optional
+    host           => 'Str':  default is '127.0.0.1'
+    port           => 'Int':  default is 24224
+    timeout        => 'Num':  default is 3.0
+    socket         => 'Str':  default undef (e.g. "/var/run/fluent/fluent.sock")
+    prefer_integer => 'Bool': default 1 (set to Data::MessagePack->prefer_integer)
 
 =item B<post>($tag:Str, $msg:HashRef)
 

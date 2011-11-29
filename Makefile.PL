@@ -8,7 +8,7 @@ license  'perl';
 auto_set_repository;
 repository 'https://github.com/hirose31/fluent-logger-perl';
 
-requires 'Data::MessagePack';
+requires 'Data::MessagePack' => '0.35_01';
 requires 'Mouse';
 requires 'Time::Piece';
 requires 'JSON';
