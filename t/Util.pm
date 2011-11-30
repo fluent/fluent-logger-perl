@@ -2,9 +2,10 @@ package t::Util;
 use strict;
 use warnings;
 use File::Temp qw/ tempdir /;
+use Path::Class qw/ dir /;
 
 use Exporter 'import';
-our @EXPORT_OK = qw/ streaming_decode_mp run_fluentd /;
+our @EXPORT_OK = qw/ streaming_decode_mp run_fluentd slurp_log /;
 
 sub streaming_decode_mp {
     my $sock   = shift;
@@ -18,13 +19,20 @@ sub streaming_decode_mp {
     }
 }
 
+sub slurp_log($) {
+    my $dir = shift;
+    my @file = grep { /test\.log/ } dir($dir)->children;
+    return join("", map { $_->slurp } @file);
+}
+
 sub run_fluentd {
     my $fixed_port = shift;
     if ( system("fluentd", "--version") != 0 ) {
         Test::More::plan skip_all => "fluentd is not installed.";
     }
 
-    my $dir = tempdir( CLEANUP => 1 );
+#    my $dir = tempdir( CLEANUP => 1 );
+    my $dir = tempdir();
     my $code = sub {
         my $port = shift;
         open my $conf, ">", "$dir/fluent.conf" or die $!;
@@ -35,7 +43,7 @@ sub run_fluentd {
 </source>
 <match test.*>
   type file
-  path ${dir}/tcp.log
+  path ${dir}/test.log
 </match>
 _END_
         exec "fluentd", "-c", "$dir/fluent.conf";

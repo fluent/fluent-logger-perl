@@ -6,7 +6,7 @@ name     'Fluent-Logger';
 all_from 'lib/Fluent/Logger.pm';
 license  'perl';
 auto_set_repository;
-repository 'https://github.com/hirose31/fluent-logger-perl';
+repository 'https://github.com/fluent/fluent-logger-perl';
 
 requires 'Data::MessagePack' => '0.35_01';
 requires 'Mouse';
@@ -16,6 +16,7 @@ requires 'JSON';
 test_requires 'Test::More' => 0.88;
 test_requires 'Test::TCP'  => 1.13;
 test_requires 'Test::SharedFork';
+test_requires 'Path::Class';
 
 tests_recursive;
 author_tests 'xt';

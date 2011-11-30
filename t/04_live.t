@@ -3,7 +3,7 @@ use warnings;
 use Test::More;
 use Test::TCP;
 use Time::Piece;
-use t::Util qw/ run_fluentd /;
+use t::Util qw/ run_fluentd slurp_log /;
 use POSIX qw/ setlocale LC_ALL /;
 
 setlocale(LC_ALL, "C");
@@ -18,15 +18,15 @@ subtest tcp => sub {
 
     isa_ok $logger, "Fluent::Logger";
     my $tag = "test.tcp";
-    ok $logger->post( $tag, { "foo" => "bar" });
+    ok $logger->post( $tag, { "foo" => "bar" }), "post ok";
 
     my $time     = time - int rand(3600);
     my $time_str = localtime($time)->strftime("%Y-%m-%dT%H:%M:%S%z");
     $time_str =~ s/(\d\d)$/:$1/; # TZ offset +0000 => +00:00
 
-    ok $logger->post_with_time( $tag, { "FOO" => "BAR" }, $time );
+    ok $logger->post_with_time( $tag, { "FOO" => "BAR" }, $time ), "post_with_time ok";
     sleep 1;
-    my $log = `cat $dir/tcp.log*`;
+    my $log = slurp_log $dir;
     note $log;
     like $log => qr{$tag\t\{"foo":"bar"\}}, "match post log";
     like $log => qr{\Q$time_str\E\t$tag\t\{"FOO":"BAR"\}}, "match post_with_time log";
@@ -58,10 +58,12 @@ subtest error => sub {
     undef $server;
     ($server, $dir) = run_fluentd($port);
 
-    ok $logger->post( "test.error" => { foo => "retried?" } ), "retried";
+    ok !$logger->post( "test.error" => { foo => "retried?" } );
+    ok $logger->close;
+    undef $server;
+
+    my $log = slurp_log $dir;
+    like $log => qr{"foo":"retried\?"}, "retried sent";
 };
-
-
-
 
 done_testing;

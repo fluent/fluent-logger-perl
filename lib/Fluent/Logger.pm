@@ -13,6 +13,13 @@ use Data::MessagePack;
 use Time::Piece;
 use JSON ();
 use Carp;
+use Scalar::Util qw/ refaddr /;
+use Time::HiRes qw/ time /;
+
+use constant RECONNECT_WAIT           => 0.5;
+use constant RECONNECT_WAIT_INCR_RATE => 1.5;
+use constant RECONNECT_WAIT_MAX       => 60;
+use constant RECONNECT_WAIT_MAX_COUNT => 12;
 
 has tag_prefix => (
     is  => "rw",
@@ -89,6 +96,18 @@ has packer => (
     },
 );
 
+has pending => (
+    is      => "rw",
+    isa     => "Str",
+    default => "",
+);
+
+has connect_error_history => (
+    is      => "rw",
+    isa     => "ArrayRef",
+    default => sub { +[] },
+);
+
 no Mouse;
 
 sub BUILD {
@@ -101,9 +120,10 @@ sub _carp {
     my $msg  = shift;
     chomp $msg;
     carp (
-        sprintf "%s %s(%s): %s",
+        sprintf "%s %s[%s](%s): %s",
         localtime->strftime("%Y-%m-%dT%H:%M:%S%z"),
         ref $self,
+        refaddr $self,
         $self->_connect_info,
         $msg,
     );
@@ -141,15 +161,34 @@ sub _connect {
                  ReuseAddr => 1,
              );
     if (!$sock) {
-        $self->_add_error($!);
+        $self->_add_error("Can't connect: $!");
+        push @{ $self->connect_error_history }, time;
+        if (@{ $self->connect_error_history } > RECONNECT_WAIT_MAX_COUNT) {
+            shift @{ $self->connect_error_history };
+        }
         return;
     }
+    $self->connect_error_history([]);
     $self->socket_io($sock);
 }
 
 sub close {
     my $self = shift;
 
+    if ( length $self->{pending} ) {
+        $self->_carp("flusing pending data on close");
+        $self->_connect unless $self->socket_io;
+        my $written = eval {
+            $self->_write( $self->{pending} );
+        };
+        if ($@ || !$written) {
+            $self->_carp("Can't send pending data. $@ lost!");
+        }
+        else {
+            $self->_carp("pending data was flushed successfully");
+        }
+    };
+    $self->{pending} = "";
     my $socket = delete $self->{socket_io};
     $socket->close if $socket;
 }
@@ -175,14 +214,9 @@ sub _post {
     }
 
     $tag = join('.', $self->tag_prefix, $tag) if $self->tag_prefix;
-    my $data = [ "$tag", int $time, $msg ];
 
-    if (! $self->socket_io) {
-        $self->_connect or do {
-            $self->_add_error("Cannot send data: " . JSON::encode_json($data));
-            return;
-        };
-    }
+    $self->packer->prefer_integer( $self->prefer_integer );
+    my $data = $self->packer->pack([ "$tag", int $time, $msg ]);
 
     $self->_send($data);
 }
@@ -190,46 +224,67 @@ sub _post {
 sub _send {
     my ($self, $data) = @_;
 
-    $self->packer->prefer_integer( $self->prefer_integer );
-    my $mpdata = $self->packer->pack($data);
-    my $length = length($mpdata);
-    my $retry  = my $written = 0;
+    $self->{pending} .= $data;
 
-    local $SIG{"PIPE"} = sub { die $! };
- TRY:
-    for my $try (1, 2) {
-        eval {
-            while ($written < $length) {
-                my $nwrite
-                    = $self->socket_io->syswrite($mpdata, $self->write_length, $written);
-
-                unless ($nwrite) {
-                    if ($retry > $self->max_write_retry) {
-                        die "failed write retry; max write retry count. $!";
-                    }
-                    $retry++;
-                }
-                $written += $nwrite;
-            }
-        };
-        if ($@) {
-            my $error = $@;
-            $self->close;
-            $self->_carp("Trying reconnect($try): $error");
-            $self->_connect or do {
-                $self->_add_error(
-                    "Cannot send data: " . JSON::encode_json($data) . " $error"
-                );
-                return;
-            };
-            $self->_carp("Successfully reconnected!");
-            next TRY; # retry
+    my $errors = @{ $self->connect_error_history };
+    if ( $errors && length $self->pending <= $self->buffer_limit )
+    {
+        my $suppress_sec;
+        if ( $errors < RECONNECT_WAIT_MAX_COUNT ) {
+            $suppress_sec = RECONNECT_WAIT * (RECONNECT_WAIT_INCR_RATE ** ($errors - 1));
         }
-        last TRY; # ok
+        else {
+            $suppress_sec = RECONNECT_WAIT_MAX;
+        }
+        if ( time - $self->connect_error_history->[-1] < $suppress_sec ) {
+            return;
+        }
     }
 
-    return $written;
+    unless ($self->socket_io) {
+        $self->_connect or return;
+    }
+
+    local $SIG{"PIPE"} = sub { die $! };
+    my $written;
+    eval {
+        $written = $self->_write( $self->{pending} );
+        $self->{pending} = "";
+    };
+    if ($@) {
+        my $error = $@;
+        $self->_add_error("Cannot send data: $error");
+        delete $self->{socket_io};
+    }
+    $written;
 }
+
+sub _write {
+    my $self = shift;
+    my $data = shift;
+    my $length = length($data);
+    my $retry  = my $written = 0;
+
+    while ($written < $length) {
+        my $nwrite
+            = $self->socket_io->syswrite($data, $self->write_length, $written);
+
+        unless ($nwrite) {
+            if ($retry > $self->max_write_retry) {
+                die "failed write retry; max write retry count. $!";
+            }
+            $retry++;
+        }
+        $written += $nwrite;
+    }
+    $written;
+}
+
+sub DEMOLISH {
+    my $self = shift;
+    $self->close;
+}
+
 
 1;
 __END__
@@ -263,14 +318,6 @@ HAVE BEEN WARNED.>
 
 =over 4
 
-=item * buffering and pending
-
-=item * timeout, reconnect
-
-=item * write pod
-
-=item * test cases
-
 =back
 
 =head1 DESCRIPTION
@@ -298,6 +345,8 @@ create new logger instance.
 
 send message to fluent server with tag.
 
+returns written messages bytes length.
+
 =item B<post_with_time>($tag:Str, $msg:HashRef, $time:Int)
 
 send message to fluent server with tag and time.
@@ -305,6 +354,8 @@ send message to fluent server with tag and time.
 =item B<close>()
 
 close connection.
+
+if the logger has pending data, flush it to server on close.
 
 =item B<errstr>
 
