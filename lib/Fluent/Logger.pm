@@ -176,13 +176,14 @@ sub close {
     my $self = shift;
 
     if ( length $self->{pending} ) {
-        $self->_carp("flusing pending data on close");
+        $self->_carp("flushing pending data on close");
         $self->_connect unless $self->socket_io;
         my $written = eval {
             $self->_write( $self->{pending} );
         };
         if ($@ || !$written) {
-            $self->_carp("Can't send pending data. $@ lost!");
+            my $size = length $self->{pending};
+            $self->_carp("Can't send pending data. LOST $size bytes.: $@");
         }
         else {
             $self->_carp("pending data was flushed successfully");
@@ -245,7 +246,6 @@ sub _send {
         $self->_connect or return;
     }
 
-    local $SIG{"PIPE"} = sub { die $! };
     my $written;
     eval {
         $written = $self->_write( $self->{pending} );
@@ -264,6 +264,8 @@ sub _write {
     my $data = shift;
     my $length = length($data);
     my $retry  = my $written = 0;
+
+    local $SIG{"PIPE"} = sub { die $! };
 
     while ($written < $length) {
         my $nwrite

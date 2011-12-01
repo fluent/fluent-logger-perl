@@ -5,6 +5,7 @@ use Test::TCP;
 use Time::Piece;
 use t::Util qw/ run_fluentd slurp_log /;
 use POSIX qw/ setlocale LC_ALL /;
+use Capture::Tiny qw/ capture /;
 
 setlocale(LC_ALL, "C");
 
@@ -59,11 +60,28 @@ subtest error => sub {
     ($server, $dir) = run_fluentd($port);
 
     ok !$logger->post( "test.error" => { foo => "retried?" } );
-    ok $logger->close;
+    my ($stdout, $stderr) = capture {
+        undef $logger;
+    };
+    like $stderr, qr{flushed success}i, "flushed success logged";
+    note $stderr;
+
     undef $server;
 
     my $log = slurp_log $dir;
     like $log => qr{"foo":"retried\?"}, "retried sent";
+};
+
+subtest lost => sub {
+    my $logger = Fluent::Logger->new( port => $port );
+    ok !$logger->post( "test.lost" => { foo => "to be lost first" } );
+    ok !$logger->post( "test.lost" => { foo => "to be lost second" } );
+
+    my ($stdout, $stderr) = capture {
+        undef $logger;
+    };
+    like $stderr, qr{LOST}i, "lost logged";
+    note $stderr;
 };
 
 done_testing;
