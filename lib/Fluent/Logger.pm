@@ -5,7 +5,7 @@ use strict;
 use warnings;
 use Mouse;
 
-our $VERSION = '0.03';
+our $VERSION = '0.04';
 
 use IO::Socket::INET;
 use IO::Socket::UNIX;
@@ -377,6 +377,8 @@ FUJIWARA Shunichiro E<lt>fujiwara _at_ cpan.orgE<gt>
 Kazuki Ohta
 
 FURUHASHI Sadayuki
+
+lestrrat
 
 =head1 REPOSITORY
 
