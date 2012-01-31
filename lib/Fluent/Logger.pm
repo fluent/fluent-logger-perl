@@ -82,6 +82,10 @@ has prefer_integer => (
     is      => "rw",
     isa     => "Bool",
     default => 1,
+    trigger => sub {
+        my ($self, $new_value) = @_;
+        $self->packer->prefer_integer( $new_value );
+    }
 );
 
 has packer => (
@@ -215,7 +219,6 @@ sub _post {
 
     $tag = join('.', $self->tag_prefix, $tag) if $self->tag_prefix;
 
-    $self->packer->prefer_integer( $self->prefer_integer );
     my $data = $self->packer->pack([ "$tag", int $time, $msg ]);
 
     $self->_send($data);
