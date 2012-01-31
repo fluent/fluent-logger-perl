@@ -31,8 +31,7 @@ sub run_fluentd {
         Test::More::plan skip_all => "fluentd is not installed.";
     }
 
-#    my $dir = tempdir( CLEANUP => 1 );
-    my $dir = tempdir();
+    my $dir = tempdir( CLEANUP => 1 );
     my $code = sub {
         my $port = shift;
         open my $conf, ">", "$dir/fluent.conf" or die $!;

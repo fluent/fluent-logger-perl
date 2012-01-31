@@ -11,7 +11,6 @@ repository 'https://github.com/fluent/fluent-logger-perl';
 requires 'Data::MessagePack' => '0.35_01';
 requires 'Mouse';
 requires 'Time::Piece';
-requires 'JSON';
 
 test_requires 'Test::More' => 0.88;
 test_requires 'Test::TCP'  => 1.13;
