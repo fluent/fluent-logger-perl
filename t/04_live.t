@@ -52,6 +52,8 @@ subtest error => sub {
     is $r => undef, "connection refused";
     like $logger->errstr => qr/Connection refused/i;
 
+    sleep 1;
+
     # restart server on the same port
     ($server, $dir) = run_fluentd($port);
     ok $logger->post( "test.error" => { foo => "reconnected?" } ), "reconnected";
