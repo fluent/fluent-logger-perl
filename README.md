@@ -79,6 +79,8 @@ Kazuki Ohta
 
 FURUHASHI Sadayuki
 
+lestrrat
+
 # REPOSITORY
 
 [https://github.com/fluent/fluent-logger-perl](https://github.com/fluent/fluent-logger-perl)

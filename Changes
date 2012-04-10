@@ -1,5 +1,8 @@
 Revision history for Fluent::Logger
 
+0.05     2012-04-10
+  * avoid checking RECONNECT_WAIT for testing reconnect (koji_magi)
+
 0.04     2012-01-31
   * shouldn't need to set prefer_integer for every post (lestrrat)
   * update README.md
