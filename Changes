@@ -1,5 +1,8 @@
 Revision history for Fluent::Logger
 
+0.06     2012-04-23
+  * wait child process on t/02_unix_socket.t (tokuhirom)
+
 0.05     2012-04-10
   * avoid checking RECONNECT_WAIT for testing reconnect (koji_magi)
 
