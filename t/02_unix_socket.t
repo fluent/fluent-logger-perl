@@ -35,5 +35,8 @@ elsif (defined $pid) {
         is_deeply $data->[2] => { foo => "bar" };
         last;
     }
+    waitpid $pid, 0;
     done_testing;
+} else {
+    die "Cannot fork: $!";
 };

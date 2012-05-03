@@ -13,6 +13,15 @@ my $port = $server->port;
 
 use_ok "Fluent::Logger";
 
+subtest 'prefer_integer trigger' => sub {
+    my $logger = Fluent::Logger->new(
+        prefer_integer => 0
+    );
+
+    is $logger->packer->get_prefer_integer, 0, "prefer_integer = 0";
+    $logger->prefer_integer( 1 );
+    is $logger->packer->get_prefer_integer, 1, "prefer_integer = 1";
+};
 
 subtest as_int => sub {
     my $logger = Fluent::Logger->new(

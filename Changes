@@ -1,5 +1,15 @@
 Revision history for Fluent::Logger
 
+0.06     2012-04-23
+  * wait child process on t/02_unix_socket.t (tokuhirom)
+
+0.05     2012-04-10
+  * avoid checking RECONNECT_WAIT for testing reconnect (koji_magi)
+
+0.04     2012-01-31
+  * shouldn't need to set prefer_integer for every post (lestrrat)
+  * update README.md
+
 0.03     2012-01-30
   * added buffering / pending feature
 
