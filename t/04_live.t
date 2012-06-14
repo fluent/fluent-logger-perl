@@ -68,6 +68,7 @@ subtest error => sub {
     like $stderr, qr{flushed success}i, "flushed success logged";
     note $stderr;
 
+    kill USR1 => $server->pid;
     undef $server;
 
     my $log = slurp_log $dir;
