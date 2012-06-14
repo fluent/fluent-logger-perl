@@ -1,5 +1,8 @@
 Revision history for Fluent::Logger
 
+0.07     2012-06-14
+  * Tell fluentd flush log forcely on t/04_live.t (cho45)
+
 0.06     2012-04-23
   * wait child process on t/02_unix_socket.t (tokuhirom)
 
