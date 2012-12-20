@@ -22,4 +22,5 @@ t/02_unix_socket.t
 t/03_tcp.t
 t/04_live.t
 t/05_prefer_integer.t
+t/06_fork.t
 t/Util.pm
