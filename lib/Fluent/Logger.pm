@@ -111,6 +111,11 @@ has connect_error_history => (
     default => sub { +[] },
 );
 
+has owner_pid => (
+    is      => "rw",
+    isa     => "Int",
+);
+
 no Mouse;
 
 sub BUILD {
@@ -150,9 +155,10 @@ sub _connect_info {
 }
 
 sub _connect {
-    my $self = shift;
+    my $self  = shift;
+    my $force = shift;
 
-    return if $self->socket_io;
+    return if $self->socket_io && !$force;
 
     my $sock = defined $self->socket
              ? IO::Socket::UNIX->new( Peer => $self->socket )
@@ -172,6 +178,7 @@ sub _connect {
         return;
     }
     $self->connect_error_history([]);
+    $self->owner_pid($$);
     $self->socket_io($sock);
 }
 
@@ -244,8 +251,9 @@ sub _send {
         }
     }
 
-    unless ($self->socket_io) {
-        $self->_connect or return;
+    # fork safe
+    if (!$self->socket_io || $self->owner_pid != $$) {
+        $self->_connect(1);
     }
 
     my $written;

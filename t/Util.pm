@@ -3,6 +3,7 @@ use strict;
 use warnings;
 use File::Temp qw/ tempdir /;
 use Path::Class qw/ dir /;
+use Test::TCP;
 
 use Exporter 'import';
 our @EXPORT_OK = qw/ streaming_decode_mp run_fluentd slurp_log /;
