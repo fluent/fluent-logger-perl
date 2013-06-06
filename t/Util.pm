@@ -50,7 +50,9 @@ _END_
         die $!;
     };
     my $server = Test::TCP->new(
-        code => $code,
+        code            => $code,
+        wait_port_sleep => 0.1,
+        wait_port_retry => 100,
         $fixed_port ? ( port => $fixed_port ) : (),
     );
     return ($server, $dir);

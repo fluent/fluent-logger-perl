@@ -13,7 +13,7 @@ requires 'Mouse';
 requires 'Time::Piece';
 
 test_requires 'Test::More' => 0.88;
-test_requires 'Test::TCP'  => 1.13;
+test_requires 'Test::TCP'  => 1.30;
 test_requires 'Test::SharedFork';
 test_requires 'Path::Class';
 test_requires 'Capture::Tiny';

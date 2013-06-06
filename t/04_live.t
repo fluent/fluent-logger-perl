@@ -59,6 +59,7 @@ subtest error => sub {
     ok $logger->post( "test.error" => { foo => "reconnected?" } ), "reconnected";
 
     undef $server;
+    sleep 1;
     ($server, $dir) = run_fluentd($port);
 
     ok !$logger->post( "test.error" => { foo => "retried?" } );
