@@ -50,7 +50,7 @@ subtest error => sub {
 
     $r = $logger->post( "test.error" => { "foo" => "connection refused?" } );
     is $r => undef, "connection refused";
-    like $logger->errstr => qr/Connection refused/i;
+    like $logger->errstr => qr/Can't connect: (?:Connection refused|Invalid argument)/i;
 
     sleep 1;
 
