@@ -1,5 +1,8 @@
 Revision history for Fluent::Logger
 
+0.10     2013-09-09
+  * fix failed test on FreeBSD (bokutin)
+
 0.09     2013-06-06
   * No code changes
   * fix failed tests with Test::TCP >= 1.27 (reported by hisaichi5518)
