@@ -31,47 +31,47 @@ Fluent::Logger is a structured event logger for Fluent.
 
 - __new__(%args)
 
-create new logger instance.
+    create new logger instance.
 
-%args:
+    %args:
 
-    tag_prefix     => 'Str':  optional
-    host           => 'Str':  default is '127.0.0.1'
-    port           => 'Int':  default is 24224
-    timeout        => 'Num':  default is 3.0
-    socket         => 'Str':  default undef (e.g. "/var/run/fluent/fluent.sock")
-    prefer_integer => 'Bool': default 1 (set to Data::MessagePack->prefer_integer)
+        tag_prefix     => 'Str':  optional
+        host           => 'Str':  default is '127.0.0.1'
+        port           => 'Int':  default is 24224
+        timeout        => 'Num':  default is 3.0
+        socket         => 'Str':  default undef (e.g. "/var/run/fluent/fluent.sock")
+        prefer_integer => 'Bool': default 1 (set to Data::MessagePack->prefer_integer)
 
 - __post__($tag:Str, $msg:HashRef)
 
-Send message to fluent server with tag.
+    Send message to fluent server with tag.
 
-Return bytes length of written messages.
+    Return bytes length of written messages.
 
-- __post_with_time__($tag:Str, $msg:HashRef, $time:Int)
+- __post\_with\_time__($tag:Str, $msg:HashRef, $time:Int)
 
-Send message to fluent server with tag and time.
+    Send message to fluent server with tag and time.
 
 - __close__()
 
-close connection.
+    close connection.
 
-If the logger has pending data, flushing it to server on close.
+    If the logger has pending data, flushing it to server on close.
 
 - __errstr__
 
-return error message.
+    return error message.
 
-    $logger->post( info => { "msg": "test" } )
-        or die $logger->errstr;
+        $logger->post( info => { "msg": "test" } )
+            or die $logger->errstr;
 
 # AUTHOR
 
-HIROSE Masaaki <hirose31 _at_ gmail.com>
+HIROSE Masaaki <hirose31 \_at\_ gmail.com>
 
-Shinichiro Sei <sei _at_ kayac.com>
+Shinichiro Sei <sei \_at\_ kayac.com>
 
-FUJIWARA Shunichiro <fujiwara _at_ cpan.org>
+FUJIWARA Shunichiro <fujiwara \_at\_ cpan.org>
 
 # THANKS TO
 

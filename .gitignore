@@ -5,3 +5,10 @@ blib/
 inc/
 pm_to_blib
 *~
+/Fluent-Logger-*
+/.build
+/_build_params
+/Build
+!Build/
+!META.json
+!LICENSE
