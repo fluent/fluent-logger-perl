@@ -1,5 +1,9 @@
 Revision history for Fluent::Logger
 
+0.11     2013-10-15
+  * No code changes
+  * Migrate to Minilla
+
 0.10     2013-09-09
   * fix failed test on FreeBSD (bokutin)
 
