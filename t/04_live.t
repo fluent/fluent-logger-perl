@@ -7,7 +7,10 @@ use t::Util qw/ run_fluentd slurp_log /;
 use POSIX qw/ setlocale LC_ALL /;
 use Capture::Tiny qw/ capture /;
 
-setlocale(LC_ALL, "C");
+use Config;
+if ( $Config{d_setlocale} ) {
+    setlocale(LC_ALL, "C");
+}
 
 my ($server, $dir) = run_fluentd();
 my $port = $server->port;
