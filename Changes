@@ -1,5 +1,10 @@
 Revision history for Fluent::Logger
 
+{{$NEXT}}
+
+0.12 2014-08-06T14:07:32Z
+  * Handle perls built without locale support (Hugmeir)
+
 0.11     2013-10-15
   * No code changes
   * Migrate to Minilla
