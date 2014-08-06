@@ -6,7 +6,6 @@ Fluent::Logger - A structured event logger for Fluent
 
     use Fluent::Logger;
     
-
     my $logger = Fluent::Logger->new(
         host => '127.0.0.1',
         port => 24224,
@@ -14,7 +13,6 @@ Fluent::Logger - A structured event logger for Fluent
     $logger->post("myapp.access", { "agent" => "foo" });
     # output: myapp.access {"agent":"foo"}
     
-
     my $logger = Fluent::Logger->new(
         tag_prefix => 'myapp',
         host       => '127.0.0.1',
