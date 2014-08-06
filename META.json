@@ -58,6 +58,11 @@
             "Mouse" : "0",
             "Time::Piece" : "0"
          }
+      },
+      "test" : {
+         "requires" : {
+            "Proc::Guard" : "0"
+         }
       }
    },
    "release_status" : "unstable",

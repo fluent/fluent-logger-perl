@@ -10,3 +10,7 @@ on build => sub {
     requires 'Test::SharedFork';
     requires 'Test::TCP', '1.3';
 };
+
+on test => sub {
+    requires 'Proc::Guard';
+};
