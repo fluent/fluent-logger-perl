@@ -281,13 +281,14 @@ sub _write {
         my $nwrite
             = $self->socket_io->syswrite($data, $self->write_length, $written);
 
-        unless ($nwrite) {
+        if (!$nwrite) {
             if ($retry > $self->max_write_retry) {
                 die "failed write retry; max write retry count. $!";
             }
             $retry++;
+        } else {
+            $written += $nwrite;
         }
-        $written += $nwrite;
     }
     $written;
 }
