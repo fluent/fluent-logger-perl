@@ -1,6 +1,6 @@
 # NAME
 
-Fluent::Logger - A structured event logger for Fluent
+Fluent::Logger - A structured event logger for [Fluentd](https://github.com/fluent/fluentd)
 
 # SYNOPSIS
 
