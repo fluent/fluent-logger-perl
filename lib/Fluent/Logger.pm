@@ -5,7 +5,7 @@ use strict;
 use warnings;
 use Mouse;
 
-our $VERSION = '0.13';
+our $VERSION = '0.14';
 
 use IO::Socket::INET;
 use IO::Socket::UNIX;

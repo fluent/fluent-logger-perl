@@ -2,6 +2,9 @@ Revision history for Fluent::Logger
 
 {{$NEXT}}
 
+0.14 2016-04-19T13:57:18Z
+  * Remove dependency for Proc::Guard (#11)
+
 0.13 2015-02-02T02:50:31Z
   * Suppress warning (Use of uninitialized value) (shoichikaji)
   * Fix document (kiyoto)

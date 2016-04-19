@@ -75,7 +75,7 @@
          "web" : "https://github.com/fluent/fluent-logger-perl"
       }
    },
-   "version" : "0.13",
+   "version" : "0.14",
    "x_contributors" : [
       "HIROSE Masaaki <hirose31@gmail.com>",
       "Shinichiro Sei <sei@kayac.com>",
@@ -87,8 +87,8 @@
       "Brian Fraser <fraserbn@gmail.com>",
       "Shoichi Kaji <skaji@cpan.org>",
       "Kiyoto Tamura <me@ktamura.com>",
-      "FUJIWARA Shunichiro <fujiwara.shunichiro@gmail.com>",
       "DQNEO <dqneoo@gmail.com>",
-      "Masahiro Nakagawa <repeatedly@gmail.com>"
+      "Masahiro Nakagawa <repeatedly@gmail.com>",
+      "FUJIWARA Shunichiro <fujiwara.shunichiro@gmail.com>"
    ]
 }
