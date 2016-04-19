@@ -4,7 +4,7 @@
       "HIROSE Masaaki <hirose31 _at_ gmail.com>"
    ],
    "dynamic_config" : 0,
-   "generated_by" : "Minilla/v0.14.1, CPAN::Meta::Converter version 2.133380",
+   "generated_by" : "Minilla/v2.5.0, CPAN::Meta::Converter version 2.150001",
    "license" : [
       "perl_5"
    ],
@@ -38,8 +38,6 @@
       },
       "configure" : {
          "requires" : {
-            "CPAN::Meta" : "0",
-            "CPAN::Meta::Prereqs" : "0",
             "Module::Build" : "0.38"
          }
       },
@@ -61,8 +59,7 @@
       },
       "test" : {
          "requires" : {
-            "Number::Format" : "0",
-            "Proc::Guard" : "0"
+            "Number::Format" : "0"
          }
       }
    },
@@ -90,6 +87,8 @@
       "Brian Fraser <fraserbn@gmail.com>",
       "Shoichi Kaji <skaji@cpan.org>",
       "Kiyoto Tamura <me@ktamura.com>",
-      "FUJIWARA Shunichiro <fujiwara.shunichiro@gmail.com>"
+      "FUJIWARA Shunichiro <fujiwara.shunichiro@gmail.com>",
+      "DQNEO <dqneoo@gmail.com>",
+      "Masahiro Nakagawa <repeatedly@gmail.com>"
    ]
 }

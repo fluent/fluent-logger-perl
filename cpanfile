@@ -12,6 +12,5 @@ on build => sub {
 };
 
 on test => sub {
-    requires 'Proc::Guard';
     requires 'Number::Format';
 };

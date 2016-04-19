@@ -1,3 +1,4 @@
+[![Build Status](https://travis-ci.org/fluent/fluent-logger-perl.svg?branch=master)](https://travis-ci.org/fluent/fluent-logger-perl)
 # NAME
 
 Fluent::Logger - A structured event logger for Fluent
@@ -27,7 +28,7 @@ Fluent::Logger is a structured event logger for Fluent.
 
 # METHODS
 
-- __new__(%args)
+- **new**(%args)
 
     create new logger instance.
 
@@ -40,23 +41,23 @@ Fluent::Logger is a structured event logger for Fluent.
         socket         => 'Str':  default undef (e.g. "/var/run/fluent/fluent.sock")
         prefer_integer => 'Bool': default 1 (set to Data::MessagePack->prefer_integer)
 
-- __post__($tag:Str, $msg:HashRef)
+- **post**($tag:Str, $msg:HashRef)
 
     Send message to fluent server with tag.
 
     Return bytes length of written messages.
 
-- __post\_with\_time__($tag:Str, $msg:HashRef, $time:Int)
+- **post\_with\_time**($tag:Str, $msg:HashRef, $time:Int)
 
     Send message to fluent server with tag and time.
 
-- __close__()
+- **close**()
 
     close connection.
 
     If the logger has pending data, flushing it to server on close.
 
-- __errstr__
+- **errstr**
 
     return error message.
 
