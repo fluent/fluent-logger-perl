@@ -5,8 +5,10 @@ use Test::TCP;
 use Time::HiRes qw/ time sleep /;
 use t::Util qw/ run_fluentd /;
 use File::Temp qw/ tempdir /;
-use Proc::Guard;
 
+Test::More::plan skip_all => "skip < 5.10" if $] < 5.010;
+
+require Proc::Guard;
 require Number::Format;
 
 use_ok "Fluent::Logger";

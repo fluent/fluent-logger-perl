@@ -5,6 +5,8 @@ use Test::TCP;
 use Time::HiRes qw/ time /;
 use t::Util qw/ run_fluentd /;
 
+Test::More::plan skip_all => "skip < 5.10" if $] < 5.010;
+
 my ($server, $dir) = run_fluentd();
 my $port = $server->port;
 
