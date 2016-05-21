@@ -3,7 +3,6 @@ package Fluent::Logger;
 
 use strict;
 use warnings;
-use Mouse;
 
 our $VERSION = '0.14';
 
@@ -20,107 +19,48 @@ use constant RECONNECT_WAIT_INCR_RATE => 1.5;
 use constant RECONNECT_WAIT_MAX       => 60;
 use constant RECONNECT_WAIT_MAX_COUNT => 12;
 
-has tag_prefix => (
-    is  => "rw",
-    isa => "Str",
-);
+use subs 'prefer_integer';
 
-has host => (
-    is      => "rw",
-    isa     => "Str",
-    default => "127.0.0.1",
-);
-
-has port => (
-    is      => "rw",
-    isa     => "Int",
-    default => 24224,
-);
-
-has socket => (
-    is       => "rw",
-    isa      => "Str",
-    required => 0,
-);
-
-has timeout => (
-    is      => "rw",
-    isa     => 'Num',
-    default => 3.0,
-);
-
-has buffer_limit => (
-    is      => "rw",
-    isa     => 'Int',
-    default => 8 * 1024 * 1024, # fixme
-);
-
-has max_write_retry => (
-    is      => "rw",
-    isa     => 'Int',
-    default => 5,
-);
-
-has write_length => (
-    is  => "rw",
-    isa => 'Int',
-    default => 8 * 1024 * 1024,
-);
-
-has socket_io => (
-    is  => "rw",
-    isa => "IO::Socket",
-);
-
-has errors => (
-    is      => "rw",
-    isa     => "ArrayRef",
-    default => sub { [] },
-);
-
-has prefer_integer => (
-    is      => "rw",
-    isa     => "Bool",
-    default => 1,
-    trigger => sub {
-        my ($self, $new_value) = @_;
-        $self->packer->prefer_integer( $new_value );
-    }
-);
-
-has packer => (
-    is      => "rw",
-    isa     => "Data::MessagePack",
-    default => sub {
+use Class::Tiny +{
+    tag_prefix => sub {},
+    host => sub { "127.0.0.1" },
+    port => sub { 24224 },
+    socket => sub {},
+    timeout => sub { 3.0 },
+    buffer_limit => sub { 8 * 1024 * 1024 }, # fixme
+    max_write_retry => sub { 5 },
+    write_length => sub { 8 * 1024 * 1024 },
+    socket_io => sub {},
+    errors => sub { [] },
+    prefer_integer => sub { 1 },
+    packer => sub {
         my $self = shift;
         my $mp   = Data::MessagePack->new;
         $mp->prefer_integer( $self->prefer_integer );
         $mp;
     },
-);
-
-has pending => (
-    is      => "rw",
-    isa     => "Str",
-    default => "",
-);
-
-has connect_error_history => (
-    is      => "rw",
-    isa     => "ArrayRef",
-    default => sub { +[] },
-);
-
-has owner_pid => (
-    is      => "rw",
-    isa     => "Int",
-);
-
-no Mouse;
+    pending => sub { "" },
+    connect_error_history => sub { +[] },
+    owner_pid => sub {},
+};
 
 sub BUILD {
     my $self = shift;
     $self->_connect;
+}
+
+sub prefer_integer {
+    my $self = shift;
+
+    if (@_) {
+        $self->{prefer_integer} = shift;
+        $self->packer->prefer_integer( $self->prefer_integer );
+    } elsif ( exists $self->{prefer_integer} ) {
+        return $self->{prefer_integer};
+    } else {
+        my $defaults = Class::Tiny->get_all_attribute_defaults_for( ref $self );
+        return $self->{prefer_integer} = $defaults->{prefer_integer}->();
+    }
 }
 
 sub _carp {
