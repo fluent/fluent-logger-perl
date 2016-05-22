@@ -2,6 +2,9 @@ Revision history for Fluent::Logger
 
 {{$NEXT}}
 
+0.15 2016-05-22T01:40:48Z
+  * Switch to Class::Tiny (#13 miyagawa)
+
 0.14 2016-04-19T13:57:18Z
   * Remove dependency for Proc::Guard (#11)
 
