@@ -1,5 +1,5 @@
 requires 'Data::MessagePack', '0.35_01';
-requires 'Mouse';
+requires 'Class::Tiny';
 requires 'Time::Piece';
 
 on build => sub {
