@@ -28,6 +28,7 @@ sub slurp_log($) {
 
 sub run_fluentd {
     my $fixed_port = shift;
+    my $input = shift || "forward";
     if ( system("fluentd", "--version") != 0 ) {
         Test::More::plan skip_all => "fluentd is not installed.";
     }
@@ -36,11 +37,30 @@ sub run_fluentd {
     my $code = sub {
         my $port = shift;
         open my $conf, ">", "$dir/fluent.conf" or die $!;
-        print $conf <<"_END_";
+        if ( $input eq "forward" ) {
+            print $conf <<"_END_";
 <source>
   type forward
   port ${port}
 </source>
+_END_
+        } elsif ($input eq "tcp" || $input eq "udp") {
+            print $conf <<"_END_";
+<source>
+  type tcp
+  tag test.tcp
+  port ${port}
+  format json
+</source>
+<source>
+  type udp
+  tag test.udp
+  port ${port}
+  format json
+</source>
+_END_
+        }
+        print $conf <<"_END_";
 <match test.*>
   type file
   path ${dir}/test.log
