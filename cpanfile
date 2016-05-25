@@ -11,6 +11,6 @@ on build => sub {
     requires 'Test::TCP', '1.3';
 };
 
-on test => sub {
+on develop => sub {
     requires 'Number::Format';
 };
