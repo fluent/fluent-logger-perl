@@ -43,6 +43,7 @@
       },
       "develop" : {
          "requires" : {
+            "Number::Format" : "0",
             "Test::CPAN::Meta" : "0",
             "Test::MinimumVersion::Fast" : "0.04",
             "Test::PAUSE::Permissions" : "0.04",
@@ -55,11 +56,6 @@
             "Class::Tiny" : "0",
             "Data::MessagePack" : "0.35_01",
             "Time::Piece" : "0"
-         }
-      },
-      "test" : {
-         "requires" : {
-            "Number::Format" : "0"
          }
       }
    },
@@ -75,7 +71,7 @@
          "web" : "https://github.com/fluent/fluent-logger-perl"
       }
    },
-   "version" : "0.15",
+   "version" : "0.16",
    "x_contributors" : [
       "HIROSE Masaaki <hirose31@gmail.com>",
       "Shinichiro Sei <sei@kayac.com>",

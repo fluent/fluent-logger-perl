@@ -2,6 +2,9 @@ Revision history for Fluent::Logger
 
 {{$NEXT}}
 
+0.16 2016-05-25T09:10:32Z
+  * Add Fluent::Logger::UDP
+
 0.15 2016-05-22T01:40:48Z
   * Switch to Class::Tiny (#13 miyagawa)
 
