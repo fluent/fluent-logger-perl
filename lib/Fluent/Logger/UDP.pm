@@ -33,7 +33,7 @@ sub _connect {
         Proto     => "udp",
     );
     if (!$sock) {
-        $self->_add_error("Can't connect: $!");
+        $self->_carp("Can't create socket: $!");
         return;
     }
     $self->{owner_pid} = $$;
