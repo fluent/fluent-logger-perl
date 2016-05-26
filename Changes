@@ -2,6 +2,9 @@ Revision history for Fluent::Logger
 
 {{$NEXT}}
 
+0.17 2016-05-26T07:57:21Z
+  * Fix error handling (Fluent::Logger::UDP)
+
 0.16 2016-05-25T09:10:32Z
   * Add Fluent::Logger::UDP
 
