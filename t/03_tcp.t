@@ -39,5 +39,6 @@ elsif (defined $pid) {
         is_deeply $data->[2] => { foo => "bar" };
         last;
     }
+    sleep 1;
     done_testing;
 };
