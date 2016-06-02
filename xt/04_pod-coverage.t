@@ -9,5 +9,6 @@ all_pod_coverage_ok(
                             max_write_retry write_length socket_io
                             errors prefer_integer packer pending
                             connect_error_history owner_pid
+                            event_time
                           / ], },
 );
