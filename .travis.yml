@@ -1,3 +1,4 @@
+sudo: false
 language: perl
 rvm:
   - 2.3
