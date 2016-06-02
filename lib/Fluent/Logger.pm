@@ -19,6 +19,9 @@ use constant RECONNECT_WAIT_INCR_RATE => 1.5;
 use constant RECONNECT_WAIT_MAX       => 60;
 use constant RECONNECT_WAIT_MAX_COUNT => 12;
 
+use constant MP_HEADER_3ELM_ARRAY => "\x93";
+use constant MP_HEADER_EVENT_TIME => "\xd7\x00";
+
 use subs 'prefer_integer';
 
 use Class::Tiny +{
@@ -42,6 +45,7 @@ use Class::Tiny +{
     pending => sub { "" },
     connect_error_history => sub { +[] },
     owner_pid => sub {},
+    event_time => sub { 0 },
 };
 
 sub BUILD {
@@ -156,6 +160,18 @@ sub post_with_time {
     $self->_post( $tag || "", $msg, $time );
 }
 
+sub _pack_time {
+    my ($self, $time) = @_;
+
+    if ($self->event_time) {
+        my $time_i  = int $time;
+        my $nanosec = int(($time - $time_i) * 10 ** 9);
+        return MP_HEADER_EVENT_TIME . pack("NN", $time_i, $nanosec);
+    } else {
+        return $self->packer->pack(int $time);
+    }
+}
+
 sub _post {
     my ($self, $tag, $msg, $time) = @_;
 
@@ -165,10 +181,10 @@ sub _post {
     }
 
     $tag = join('.', $self->tag_prefix, $tag) if $self->tag_prefix;
-
-    my $data = $self->packer->pack([ "$tag", int $time, $msg ]);
-
-    $self->_send($data);
+    my $p = $self->packer;
+    $self->_send(
+        MP_HEADER_3ELM_ARRAY . $p->pack($tag) . $self->_pack_time($time) . $p->pack($msg)
+    );
 }
 
 sub _send {
@@ -287,6 +303,7 @@ create new logger instance.
     timeout        => 'Num':  default is 3.0
     socket         => 'Str':  default undef (e.g. "/var/run/fluent/fluent.sock")
     prefer_integer => 'Bool': default 1 (set to Data::MessagePack->prefer_integer)
+    event_time     => 'Bool': default 0 (timestamp includes nanoseconds, supported by fluentd >= 0.14.0)
 
 =item B<post>($tag:Str, $msg:HashRef)
 
@@ -294,9 +311,13 @@ Send message to fluent server with tag.
 
 Return bytes length of written messages.
 
-=item B<post_with_time>($tag:Str, $msg:HashRef, $time:Int)
+If event_time is set to true, log's timestamp includes nanoseconds.
+
+=item B<post_with_time>($tag:Str, $msg:HashRef, $time:Int|Float)
 
 Send message to fluent server with tag and time.
+
+If event_time is set to true, $time argument accepts Float value (such as Time::HiRes::time()).
 
 =item B<close>()
 
