@@ -1,4 +1,6 @@
 language: perl
+rvm:
+  - 2.3
 perl:
   - "5.22"
   - "5.20"
