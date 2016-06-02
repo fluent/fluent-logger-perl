@@ -9,6 +9,7 @@ on build => sub {
     requires 'Test::More', '0.88';
     requires 'Test::SharedFork';
     requires 'Test::TCP', '1.3';
+    requires 'version', '0.77';
 };
 
 on develop => sub {

@@ -33,7 +33,8 @@
             "Path::Class" : "0",
             "Test::More" : "0.88",
             "Test::SharedFork" : "0",
-            "Test::TCP" : "1.3"
+            "Test::TCP" : "1.3",
+            "version" : "0.77"
          }
       },
       "configure" : {
