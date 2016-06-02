@@ -15,7 +15,7 @@ require Number::Format;
 use_ok "Fluent::Logger";
 diag "starting benchmark...";
 for my $size ( 10, 100, 1000 ) {
-    my $n = 10000;
+    my $n = 50000;
     my $msg = "x" x $size;
     my $start  = time;
     my $logger = Fluent::Logger->new( port => $port );

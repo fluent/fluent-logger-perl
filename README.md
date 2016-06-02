@@ -40,6 +40,7 @@ Fluent::Logger is a structured event logger for Fluent.
         timeout        => 'Num':  default is 3.0
         socket         => 'Str':  default undef (e.g. "/var/run/fluent/fluent.sock")
         prefer_integer => 'Bool': default 1 (set to Data::MessagePack->prefer_integer)
+        event_time     => 'Bool': default 0 (timestamp includes nanoseconds, supported by fluentd >= 0.14.0)
 
 - **post**($tag:Str, $msg:HashRef)
 
@@ -47,9 +48,13 @@ Fluent::Logger is a structured event logger for Fluent.
 
     Return bytes length of written messages.
 
-- **post\_with\_time**($tag:Str, $msg:HashRef, $time:Int)
+    If event\_time is set to true, log's timestamp includes nanoseconds.
+
+- **post\_with\_time**($tag:Str, $msg:HashRef, $time:Int|Float)
 
     Send message to fluent server with tag and time.
+
+    If event\_time is set to true, $time argument accepts Float value (such as Time::HiRes::time()).
 
 - **close**()
 

@@ -1,3 +1,4 @@
+sudo: false
 language: perl
 perl:
   - "5.22"
@@ -9,6 +10,6 @@ perl:
   - "5.10"
   - "5.8"
 before_install:
-  - cpanm Proc::Guard # for xt/
-  - gem install fluentd --no-document
+  - cpanm -nf Proc::Guard Number::Format # for xt/
+  - gem install fluentd --no-document -v '~> 0.12.0'
 

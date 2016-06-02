@@ -3,7 +3,7 @@ use warnings;
 use Test::More;
 use Test::TCP;
 use Time::Piece;
-use t::Util qw/ run_fluentd slurp_log /;
+use t::Util qw/ run_fluentd slurp_log $ENABLE_TEST_EVENT_TIME /;
 use POSIX qw/ setlocale LC_ALL /;
 use Capture::Tiny qw/ capture /;
 
@@ -25,8 +25,7 @@ subtest tcp => sub {
     ok $logger->post( $tag, { "foo" => "bar" }), "post ok";
 
     my $time     = time - int rand(3600);
-    my $time_str = localtime($time)->strftime("%Y-%m-%dT%H:%M:%S%z");
-    $time_str =~ s/(\d\d)$/:$1/; # TZ offset +0000 => +00:00
+    my $time_str = localtime($time)->strftime("%Y-%m-%dT%H:%M:%S.000000000%z");
 
     ok $logger->post_with_time( $tag, { "FOO" => "BAR" }, $time ), "post_with_time ok";
     sleep 1;
@@ -34,6 +33,28 @@ subtest tcp => sub {
     note $log;
     like $log => qr{$tag\t\{"foo":"bar"\}}, "match post log";
     like $log => qr{\Q$time_str\E\t$tag\t\{"FOO":"BAR"\}}, "match post_with_time log";
+};
+
+subtest tcp_event_time => sub {
+    plan skip_all => "installed fluentd not supports event_time"
+        unless $ENABLE_TEST_EVENT_TIME;
+
+    my $logger = Fluent::Logger->new( port => $port, event_time => 1 );
+    isa_ok $logger, "Fluent::Logger";
+    my $tag = "test.tcp";
+    ok $logger->post( $tag, { "event_time" => "foo" }), "post ok";
+
+    my $time     = Time::HiRes::time;
+    my $time_i   = int($time);
+    my $nanosec  = sprintf("%09d", int(($time - $time_i) * 10 ** 9));
+    my $time_str = localtime($time)->strftime("%Y-%m-%dT%H:%M:%S.${nanosec}%z");
+
+    ok $logger->post_with_time( $tag, { "event_time" => "bar" }, $time ), "post_with_time ok";
+    sleep 1;
+    my $log = slurp_log $dir;
+    note $log;
+    like $log => qr{\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{9}[+-]\d{4}\t$tag\t\{"event_time":"foo"\}}, "match post log";
+    like $log => qr{\Q$time_str\E\t$tag\t\{"event_time":"bar"\}}, "match post_with_time log";
 };
 
 subtest error => sub {
