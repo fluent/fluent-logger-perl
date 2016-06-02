@@ -72,7 +72,7 @@
          "web" : "https://github.com/fluent/fluent-logger-perl"
       }
    },
-   "version" : "0.17",
+   "version" : "0.18",
    "x_contributors" : [
       "HIROSE Masaaki <hirose31@gmail.com>",
       "Shinichiro Sei <sei@kayac.com>",

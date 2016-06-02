@@ -2,6 +2,9 @@ Revision history for Fluent::Logger
 
 {{$NEXT}}
 
+0.18 2016-06-02T05:52:34Z
+  * Support Sub-second time (for Fluentd 0.14 or later)
+
 0.17 2016-05-26T07:57:21Z
   * Fix error handling (Fluent::Logger::UDP)
 
