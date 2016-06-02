@@ -1,7 +1,5 @@
 sudo: false
 language: perl
-rvm:
-  - 2.3
 perl:
   - "5.22"
   - "5.20"
@@ -13,5 +11,5 @@ perl:
   - "5.8"
 before_install:
   - cpanm Proc::Guard # for xt/
-  - gem install fluentd --no-document
+  - gem install fluentd --no-document -v '~> 0.12.0'
 
