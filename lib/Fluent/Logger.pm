@@ -31,6 +31,7 @@ use Class::Tiny +{
     socket => sub {},
     timeout => sub { 3.0 },
     buffer_limit => sub { 8 * 1024 * 1024 }, # fixme
+    buffer_overflow_handler => sub { undef },
     max_write_retry => sub { 5 },
     write_length => sub { 8 * 1024 * 1024 },
     socket_io => sub {},
@@ -220,9 +221,25 @@ sub _send {
     if ($@) {
         my $error = $@;
         $self->_add_error("Cannot send data: $error");
+        if ( length $self->pending > $self->buffer_limit ) {
+            $self->_call_buffer_overflow_handler();
+            $self->{pending} = "";
+        }
         delete $self->{socket_io};
     }
     $written;
+}
+
+sub _call_buffer_overflow_handler {
+    my $self = shift;
+    if (my $handler = $self->buffer_overflow_handler()) {
+        eval {
+            $handler->($self->pending);
+        };
+        if (my $error = $@) {
+            $self->_add_error("Can't call buffer overflow handler: $error");
+        }
+    }
 }
 
 sub _write {
