@@ -32,6 +32,7 @@ use Class::Tiny +{
     timeout => sub { 3.0 },
     buffer_limit => sub { 8 * 1024 * 1024 }, # fixme
     buffer_overflow_handler => sub { undef },
+    truncate_buffer_at_overflow => sub { 0 },
     max_write_retry => sub { 5 },
     write_length => sub { 8 * 1024 * 1024 },
     socket_io => sub {},
@@ -191,6 +192,8 @@ sub _post {
 sub _send {
     my ($self, $data) = @_;
 
+    my $prev_size = length($self->{pending});
+    my $current_size = length($data);
     $self->{pending} .= $data;
 
     my $errors = @{ $self->connect_error_history };
@@ -223,10 +226,14 @@ sub _send {
         $self->_add_error("Cannot send data: $error");
         delete $self->{socket_io};
         if ( length($self->{pending}) > $self->buffer_limit ) {
-            $self->_call_buffer_overflow_handler();
-            $self->{pending} = "";
-            return;
+            if ( defined $self->buffer_overflow_handler ) {
+                $self->_call_buffer_overflow_handler();
+                $self->{pending} = "";
+            } elsif ( $self->truncate_buffer_at_overflow ) {
+                substr($self->{pending}, $prev_size, $current_size, "");
+            }
         }
+        return;
     }
     $written;
 }
@@ -235,7 +242,7 @@ sub _call_buffer_overflow_handler {
     my $self = shift;
     if (my $handler = $self->buffer_overflow_handler) {
         eval {
-            $handler->($self->pending);
+            $handler->($self->{pending});
         };
         if (my $error = $@) {
             $self->_add_error("Can't call buffer overflow handler: $error");
@@ -315,14 +322,16 @@ create new logger instance.
 
 %args:
 
-    tag_prefix              => 'Str':  optional
-    host                    => 'Str':  default is '127.0.0.1'
-    port                    => 'Int':  default is 24224
-    timeout                 => 'Num':  default is 3.0
-    socket                  => 'Str':  default undef (e.g. "/var/run/fluent/fluent.sock")
-    prefer_integer          => 'Bool': default 1 (set to Data::MessagePack->prefer_integer)
-    event_time              => 'Bool': default 0 (timestamp includes nanoseconds, supported by fluentd >= 0.14.0)
-    buffer_overflow_handler => 'Code': optional
+    tag_prefix                  => 'Str':  optional
+    host                        => 'Str':  default is '127.0.0.1'
+    port                        => 'Int':  default is 24224
+    timeout                     => 'Num':  default is 3.0
+    socket                      => 'Str':  default undef (e.g. "/var/run/fluent/fluent.sock")
+    prefer_integer              => 'Bool': default 1 (set to Data::MessagePack->prefer_integer)
+    event_time                  => 'Bool': default 0 (timestamp includes nanoseconds, supported by fluentd >= 0.14.0)
+    buffer_limit                => 'Int':  defualt 8388608 (8MB)
+    buffer_overflow_handler     => 'Code': optional
+    truncate_buffer_at_overflow => 'Bool': default 0
 
 =over 4
 
@@ -333,6 +342,12 @@ This will mitigate the loss of data instead of simply throwing data away.
 
 Your proc should accept a single argument, which will be the internal buffer of messages from the logger.
 A typical use-case for this would be writing to disk or possibly writing to Redis.
+
+=item truncate_buffer_at_overflow
+
+When truncate_buffer_at_overflow is true and pending buffer size is larger than buffer_limit, post() returns undef.
+
+Pending buffer still be kept, but last message passed to post() is not sent and not appended to buffer. You may handle the message by other method.
 
 =back
 
