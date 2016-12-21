@@ -34,14 +34,16 @@ Fluent::Logger is a structured event logger for Fluent.
 
     %args:
 
-        tag_prefix              => 'Str':  optional
-        host                    => 'Str':  default is '127.0.0.1'
-        port                    => 'Int':  default is 24224
-        timeout                 => 'Num':  default is 3.0
-        socket                  => 'Str':  default undef (e.g. "/var/run/fluent/fluent.sock")
-        prefer_integer          => 'Bool': default 1 (set to Data::MessagePack->prefer_integer)
-        event_time              => 'Bool': default 0 (timestamp includes nanoseconds, supported by fluentd >= 0.14.0)
-        buffer_overflow_handler => 'Code': optional
+        tag_prefix                  => 'Str':  optional
+        host                        => 'Str':  default is '127.0.0.1'
+        port                        => 'Int':  default is 24224
+        timeout                     => 'Num':  default is 3.0
+        socket                      => 'Str':  default undef (e.g. "/var/run/fluent/fluent.sock")
+        prefer_integer              => 'Bool': default 1 (set to Data::MessagePack->prefer_integer)
+        event_time                  => 'Bool': default 0 (timestamp includes nanoseconds, supported by fluentd >= 0.14.0)
+        buffer_limit                => 'Int':  defualt 8388608 (8MB)
+        buffer_overflow_handler     => 'Code': optional
+        truncate_buffer_at_overflow => 'Bool': default 0
 
     - buffer\_overflow\_handler
 
@@ -50,6 +52,12 @@ Fluent::Logger is a structured event logger for Fluent.
 
         Your proc should accept a single argument, which will be the internal buffer of messages from the logger.
         A typical use-case for this would be writing to disk or possibly writing to Redis.
+
+    - truncate\_buffer\_at\_overflow
+
+        When truncate\_buffer\_at\_overflow is true and pending buffer size is larger than buffer\_limit, post() returns undef.
+
+        Pending buffer still be kept, but last message passed to post() is not sent and not appended to buffer. You may handle the message by other method.
 
 - **post**($tag:Str, $msg:HashRef)
 
