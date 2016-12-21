@@ -31,6 +31,7 @@ use Class::Tiny +{
     socket => sub {},
     timeout => sub { 3.0 },
     buffer_limit => sub { 8 * 1024 * 1024 }, # fixme
+    buffer_overflow_handler => sub { undef },
     max_write_retry => sub { 5 },
     write_length => sub { 8 * 1024 * 1024 },
     socket_io => sub {},
@@ -220,9 +221,25 @@ sub _send {
     if ($@) {
         my $error = $@;
         $self->_add_error("Cannot send data: $error");
+        if ( length($self->pending) > $self->buffer_limit ) {
+            $self->_call_buffer_overflow_handler();
+            $self->{pending} = "";
+        }
         delete $self->{socket_io};
     }
     $written;
+}
+
+sub _call_buffer_overflow_handler {
+    my $self = shift;
+    if (my $handler = $self->buffer_overflow_handler) {
+        eval {
+            $handler->($self->pending);
+        };
+        if (my $error = $@) {
+            $self->_add_error("Can't call buffer overflow handler: $error");
+        }
+    }
 }
 
 sub _write {
@@ -297,13 +314,26 @@ create new logger instance.
 
 %args:
 
-    tag_prefix     => 'Str':  optional
-    host           => 'Str':  default is '127.0.0.1'
-    port           => 'Int':  default is 24224
-    timeout        => 'Num':  default is 3.0
-    socket         => 'Str':  default undef (e.g. "/var/run/fluent/fluent.sock")
-    prefer_integer => 'Bool': default 1 (set to Data::MessagePack->prefer_integer)
-    event_time     => 'Bool': default 0 (timestamp includes nanoseconds, supported by fluentd >= 0.14.0)
+    tag_prefix              => 'Str':  optional
+    host                    => 'Str':  default is '127.0.0.1'
+    port                    => 'Int':  default is 24224
+    timeout                 => 'Num':  default is 3.0
+    socket                  => 'Str':  default undef (e.g. "/var/run/fluent/fluent.sock")
+    prefer_integer          => 'Bool': default 1 (set to Data::MessagePack->prefer_integer)
+    event_time              => 'Bool': default 0 (timestamp includes nanoseconds, supported by fluentd >= 0.14.0)
+    buffer_overflow_handler => 'Code': optional
+
+=over 4
+
+=item buffer_overflow_handler
+
+You can inject your own custom coderef to handle buffer overflow in the event of connection failure.
+This will mitigate the loss of data instead of simply throwing data away.
+
+Your proc should accept a single argument, which will be the internal buffer of messages from the logger.
+A typical use-case for this would be writing to disk or possibly writing to Redis.
+
+=back
 
 =item B<post>($tag:Str, $msg:HashRef)
 
