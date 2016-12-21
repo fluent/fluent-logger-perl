@@ -34,13 +34,22 @@ Fluent::Logger is a structured event logger for Fluent.
 
     %args:
 
-        tag_prefix     => 'Str':  optional
-        host           => 'Str':  default is '127.0.0.1'
-        port           => 'Int':  default is 24224
-        timeout        => 'Num':  default is 3.0
-        socket         => 'Str':  default undef (e.g. "/var/run/fluent/fluent.sock")
-        prefer_integer => 'Bool': default 1 (set to Data::MessagePack->prefer_integer)
-        event_time     => 'Bool': default 0 (timestamp includes nanoseconds, supported by fluentd >= 0.14.0)
+        tag_prefix              => 'Str':  optional
+        host                    => 'Str':  default is '127.0.0.1'
+        port                    => 'Int':  default is 24224
+        timeout                 => 'Num':  default is 3.0
+        socket                  => 'Str':  default undef (e.g. "/var/run/fluent/fluent.sock")
+        prefer_integer          => 'Bool': default 1 (set to Data::MessagePack->prefer_integer)
+        event_time              => 'Bool': default 0 (timestamp includes nanoseconds, supported by fluentd >= 0.14.0)
+        buffer_overflow_handler => 'Code': optional
+
+    - buffer\_overflow\_handler
+
+        You can inject your own custom coderef to handle buffer overflow in the event of connection failure.
+        This will mitigate the loss of data instead of simply throwing data away.
+
+        Your proc should accept a single argument, which will be the internal buffer of messages from the logger.
+        A typical use-case for this would be writing to disk or possibly writing to Redis.
 
 - **post**($tag:Str, $msg:HashRef)
 
@@ -71,11 +80,11 @@ Fluent::Logger is a structured event logger for Fluent.
 
 # AUTHOR
 
-HIROSE Masaaki <hirose31 \_at\_ gmail.com>
+HIROSE Masaaki &lt;hirose31 \_at\_ gmail.com>
 
-Shinichiro Sei <sei \_at\_ kayac.com>
+Shinichiro Sei &lt;sei \_at\_ kayac.com>
 
-FUJIWARA Shunichiro <fujiwara \_at\_ cpan.org>
+FUJIWARA Shunichiro &lt;fujiwara \_at\_ cpan.org>
 
 # THANKS TO
 

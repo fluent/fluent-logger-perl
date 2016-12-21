@@ -221,11 +221,12 @@ sub _send {
     if ($@) {
         my $error = $@;
         $self->_add_error("Cannot send data: $error");
-        if ( length($self->pending) > $self->buffer_limit ) {
+        delete $self->{socket_io};
+        if ( length($self->{pending}) > $self->buffer_limit ) {
             $self->_call_buffer_overflow_handler();
             $self->{pending} = "";
+            return;
         }
-        delete $self->{socket_io};
     }
     $written;
 }
