@@ -18,9 +18,10 @@ my $no_such_logger = Fluent::Logger->new(
 for (1..10) {
     $no_such_logger->post("test", { "k" => "v" x (1024 * 1024) });
 }
-undef $no_such_logger;
+is $handler_called, 1, 'called once at buffer_overflow';
 
-is $handler_called, 1;
+undef $no_such_logger;
+is $handler_called, 2, 'called once at close';
 
 done_testing;
 

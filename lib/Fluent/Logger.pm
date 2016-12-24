@@ -140,6 +140,7 @@ sub close {
         if ($@ || !$written) {
             my $size = length $self->{pending};
             $self->_carp("Can't send pending data. LOST $size bytes.: $@");
+            $self->_call_buffer_overflow_handler();
         }
         else {
             $self->_carp("pending data was flushed successfully");
@@ -341,6 +342,7 @@ You can inject your own custom coderef to handle buffer overflow in the event of
 This will mitigate the loss of data instead of simply throwing data away.
 
 Your proc should accept a single argument, which will be the internal buffer of messages from the logger.
+This coderef is also called when logger.close() failed to flush the remaining internal buffer of messages.
 A typical use-case for this would be writing to disk or possibly writing to Redis.
 
 =item truncate_buffer_at_overflow
