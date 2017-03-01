@@ -48,20 +48,20 @@ sub run_fluentd {
         if ( $input eq "forward" ) {
             print $conf <<"_END_";
 <source>
-  type forward
+  \@type forward
   port ${port}
 </source>
 _END_
         } elsif ($input eq "tcp" || $input eq "udp") {
             print $conf <<"_END_";
 <source>
-  type tcp
+  \@type tcp
   tag test.tcp
   port ${port}
   format json
 </source>
 <source>
-  type udp
+  \@type udp
   tag test.udp
   port ${port}
   format json
@@ -70,12 +70,17 @@ _END_
         }
         print $conf <<"_END_";
 <match test.*>
-  type file
-  path ${dir}/test.log
+  \@type stdout
   time_format %Y-%m-%dT%H:%M:%S.%N%z
+  include_time_key true
+  include_tag_key true
+  format json
 </match>
 _END_
-        exec "fluentd", "-c", "$dir/fluent.conf";
+        exec "fluentd",
+            "-c", "$dir/fluent.conf",
+            "--log", "$dir/test.log",
+        ;
         die $!;
     };
     my $server = Test::TCP->new(

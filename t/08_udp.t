@@ -26,7 +26,7 @@ subtest udp => sub {
     sleep 1;
     my $log = slurp_log $dir;
     note $log;
-    like $log => qr{test\.udp\t\{"foo":"bar"\}}, "match post log";
+    like $log => qr/"foo":"bar","tag":"test\.udp"/, "match post log";
 };
 
 done_testing;
