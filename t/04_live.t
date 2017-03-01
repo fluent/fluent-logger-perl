@@ -31,8 +31,8 @@ subtest tcp => sub {
     sleep 1;
     my $log = slurp_log $dir;
     note $log;
-    like $log => qr{$tag\t\{"foo":"bar"\}}, "match post log";
-    like $log => qr{\Q$time_str\E\t$tag\t\{"FOO":"BAR"\}}, "match post_with_time log";
+    like $log => qr/"foo":"bar","tag":"$tag"/, "match post log";
+    like $log => qr/"FOO":"BAR","tag":"$tag","time":"\Q$time_str\E"/, "match post_with_time log";
 };
 
 subtest tcp_event_time => sub {
@@ -53,8 +53,8 @@ subtest tcp_event_time => sub {
     sleep 1;
     my $log = slurp_log $dir;
     note $log;
-    like $log => qr{\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{9}[+-]\d{4}\t$tag\t\{"event_time":"foo"\}}, "match post log";
-    like $log => qr{\Q$time_str\E\t$tag\t\{"event_time":"bar"\}}, "match post_with_time log";
+    like $log => qr/"event_time":"foo","tag":"$tag","time":"\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{9}[+-]\d{4}"/, "match post log";
+    like $log => qr/"event_time":"bar","tag":"$tag","time":"\Q$time_str\E"/, "match post_with_time log";
 };
 
 subtest error => sub {

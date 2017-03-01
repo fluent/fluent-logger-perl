@@ -28,8 +28,8 @@ subtest str_bin => sub {
     sleep 1;
     my $log = slurp_log $dir;
     note $log;
-    like $log => qr{$tag\t\{"foo":"内部文字列"\}}, "match post str log";
-    like $log => qr{$tag\t\{"bar":"バイナリ列"\}}, "match post bin log";
+    like $log => qr/"foo":"内部文字列","tag":"$tag"/, "match post str log";
+    like $log => qr/"bar":"バイナリ列","tag":"$tag"/, "match post bin log";
 };
 
 done_testing;
