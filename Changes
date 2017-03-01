@@ -2,6 +2,9 @@ Revision history for Fluent::Logger
 
 {{$NEXT}}
 
+0.20 2017-03-01T04:36:41Z
+  * Fix tests only which broken with Fluentd 0.14 (#20 #21)
+
 0.19 2016-12-21T08:44:55Z
   * Added fluent-logger-ruby compatible buffer_overflow_handler (#17 tokuhirom)
   * Added truncate_buffer_at_overflow option (#18)
