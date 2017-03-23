@@ -2,6 +2,9 @@ Revision history for Fluent::Logger
 
 {{$NEXT}}
 
+0.21 2017-03-23T01:33:19Z
+  * Call buffer_overflow_handler at close() (#21 yoheimuta)
+
 0.20 2017-03-01T04:36:41Z
   * Fix tests only which broken with Fluentd 0.14 (#20 #21)
 

@@ -72,7 +72,7 @@
          "web" : "https://github.com/fluent/fluent-logger-perl"
       }
    },
-   "version" : "0.20",
+   "version" : "0.21",
    "x_contributors" : [
       "HIROSE Masaaki <hirose31@gmail.com>",
       "Shinichiro Sei <sei@kayac.com>",
@@ -87,6 +87,7 @@
       "Masahiro Nakagawa <repeatedly@gmail.com>",
       "Tatsuhiko Miyagawa <miyagawa@bulknews.net>",
       "Tokuhiro Matsuno <tokuhirom@gmail.com>",
+      "yoheimuta <yoheimuta@gmail.com>",
       "FUJIWARA Shunichiro <fujiwara.shunichiro@gmail.com>"
    ],
    "x_serialization_backend" : "JSON::PP version 2.27300"

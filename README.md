@@ -51,6 +51,7 @@ Fluent::Logger is a structured event logger for Fluent.
         This will mitigate the loss of data instead of simply throwing data away.
 
         Your proc should accept a single argument, which will be the internal buffer of messages from the logger.
+        This coderef is also called when logger.close() failed to flush the remaining internal buffer of messages.
         A typical use-case for this would be writing to disk or possibly writing to Redis.
 
     - truncate\_buffer\_at\_overflow
