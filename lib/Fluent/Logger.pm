@@ -9,10 +9,12 @@ our $VERSION = '0.21';
 use IO::Socket::INET;
 use IO::Socket::UNIX;
 use Data::MessagePack;
+use Data::MessagePack::Stream;
 use Time::Piece;
 use Carp;
 use Scalar::Util qw/ refaddr /;
 use Time::HiRes qw/ time /;
+use Data::UUID ();
 
 use constant RECONNECT_WAIT           => 0.5;
 use constant RECONNECT_WAIT_INCR_RATE => 1.5;
@@ -20,6 +22,7 @@ use constant RECONNECT_WAIT_MAX       => 60;
 use constant RECONNECT_WAIT_MAX_COUNT => 12;
 
 use constant MP_HEADER_3ELM_ARRAY => "\x93";
+use constant MP_HEADER_4ELM_ARRAY => "\x94";
 use constant MP_HEADER_EVENT_TIME => "\xd7\x00";
 
 use subs 'prefer_integer';
@@ -48,7 +51,15 @@ use Class::Tiny +{
     connect_error_history => sub { +[] },
     owner_pid => sub {},
     event_time => sub { 0 },
+    ack => sub { 0 },
+    pending_acks => sub { +[] },
+    unpacker => sub {
+        Data::MessagePack::Stream->new;
+    },
 };
+
+my $uuid = Data::UUID->new;
+
 
 sub BUILD {
     my $self = shift;
@@ -125,7 +136,7 @@ sub _connect {
     }
     $self->connect_error_history([]);
     $self->owner_pid($$);
-    $self->socket_io($sock);
+    $self->socket_io($socket);
 }
 
 sub close {
@@ -141,8 +152,7 @@ sub close {
             my $size = length $self->{pending};
             $self->_carp("Can't send pending data. LOST $size bytes.: $@");
             $self->_call_buffer_overflow_handler();
-        }
-        else {
+        } else {
             $self->_carp("pending data was flushed successfully");
         }
     };
@@ -186,12 +196,23 @@ sub _post {
     $tag = join('.', $self->tag_prefix, $tag) if $self->tag_prefix;
     my $p = $self->packer;
     $self->_send(
-        MP_HEADER_3ELM_ARRAY . $p->pack($tag) . $self->_pack_time($time) . $p->pack($msg)
+        $p->pack($tag),
+        $self->_pack_time($time),
+        $p->pack($msg),
     );
 }
 
 sub _send {
-    my ($self, $data) = @_;
+    my ($self, @args) = @_;
+
+    my ($data, $unique_key);
+    if ( $self->{ack} ) {
+        $unique_key = $uuid->create_b64;
+        $data = join('', MP_HEADER_4ELM_ARRAY, @args, $self->{packer}->pack({ chunk => $unique_key }));
+        push @{$self->{pending_acks}}, $unique_key;
+    } else {
+        $data = join('', MP_HEADER_3ELM_ARRAY, @args);
+    }
 
     my $prev_size = length($self->{pending});
     my $current_size = length($data);
@@ -203,8 +224,7 @@ sub _send {
         my $suppress_sec;
         if ( $errors < RECONNECT_WAIT_MAX_COUNT ) {
             $suppress_sec = RECONNECT_WAIT * (RECONNECT_WAIT_INCR_RATE ** ($errors - 1));
-        }
-        else {
+        } else {
             $suppress_sec = RECONNECT_WAIT_MAX;
         }
         if ( time - $self->connect_error_history->[-1] < $suppress_sec ) {
@@ -220,6 +240,7 @@ sub _send {
     my $written;
     eval {
         $written = $self->_write( $self->{pending} );
+        $self->_wait_ack();
         $self->{pending} = "";
     };
     if ($@) {
@@ -230,13 +251,39 @@ sub _send {
             if ( defined $self->buffer_overflow_handler ) {
                 $self->_call_buffer_overflow_handler();
                 $self->{pending} = "";
+                $self->{pending_acks} = [] if $self->ack;
             } elsif ( $self->truncate_buffer_at_overflow ) {
                 substr($self->{pending}, $prev_size, $current_size, "");
+                pop @{$self->{pending_acks}} if $self->ack;
             }
         }
         return;
     }
-    $written;
+    return $written;
+}
+
+sub _wait_ack {
+    my $self = shift;
+    return unless $self->{ack};
+
+    my $up = $self->unpacker;
+READ:
+    while ($self->socket_io->sysread(my $buf, 1024)) {
+        $up->feed($buf);
+        while ($up->next) {
+            my $ack = $up->data;
+            my $unique_key = shift @{ $self->{pending_acks} } or last READ;
+            if ($unique_key && ref $ack eq "HASH") {
+                if ($ack->{ack} ne $unique_key) {
+                    $self->_carp("Can't send data. ack is not expected: " . $ack->{ack});
+                }
+            } else {
+                $self->_carp("Can't send data. ack is not expected. $@");
+            }
+            last READ if @{ $self->{pending_acks} } == 0;
+        }
+    }
+    return;
 }
 
 sub _call_buffer_overflow_handler {
