@@ -6,6 +6,7 @@ use warnings;
 
 our $VERSION = '0.21';
 
+use IO::Select;
 use IO::Socket::INET;
 use IO::Socket::UNIX;
 use Data::MessagePack;
@@ -56,6 +57,7 @@ use Class::Tiny +{
     unpacker => sub {
         Data::MessagePack::Stream->new;
     },
+    selector => sub { },
 };
 
 my $uuid = Data::UUID->new;
@@ -84,7 +86,7 @@ sub _carp {
     my $self = shift;
     my $msg  = shift;
     chomp $msg;
-    carp (
+    carp(
         sprintf "%s %s[%s](%s): %s",
         localtime->strftime("%Y-%m-%dT%H:%M:%S%z"),
         ref $self,
@@ -136,7 +138,8 @@ sub _connect {
     }
     $self->connect_error_history([]);
     $self->owner_pid($$);
-    $self->socket_io($socket);
+    $self->selector(IO::Select->new($sock));
+    $self->socket_io($sock);
 }
 
 sub close {
@@ -157,6 +160,8 @@ sub close {
         }
     };
     $self->{pending} = "";
+    $self->{pending_acks} = [];
+    delete $self->{selector};
     my $socket = delete $self->{socket_io};
     $socket->close if $socket;
 }
@@ -240,13 +245,18 @@ sub _send {
     my $written;
     eval {
         $written = $self->_write( $self->{pending} );
-        $self->_wait_ack();
-        $self->{pending} = "";
+        my $acked = $self->_wait_ack(@{ $self->{pending_acks} });
+        if ($written && $acked) {
+            $self->{pending} = "";
+            $self->{pending_acks} = [];
+        }
     };
     if ($@) {
         my $error = $@;
         $self->_add_error("Cannot send data: $error");
-        delete $self->{socket_io};
+        my $sock = delete $self->{socket_io};
+        $sock->close if $sock;
+        delete $self->{selector};
         if ( length($self->{pending}) > $self->buffer_limit ) {
             if ( defined $self->buffer_overflow_handler ) {
                 $self->_call_buffer_overflow_handler();
@@ -259,31 +269,41 @@ sub _send {
         }
         return;
     }
+
     return $written;
 }
 
 sub _wait_ack {
     my $self = shift;
-    return unless $self->{ack};
+    my @acks = @_;
+    return 1 unless $self->ack;
 
     my $up = $self->unpacker;
+    local $SIG{"PIPE"} = sub { die $! };
 READ:
-    while ($self->socket_io->sysread(my $buf, 1024)) {
+    while (1) {
+        my ($s) = $self->selector->can_read($self->timeout);
+        if (!$s) {
+            die "ack read timed out";
+        }
+        $s->sysread(my $buf, 1024);
+        return if @acks > 0 && length($buf) == 0;
         $up->feed($buf);
         while ($up->next) {
             my $ack = $up->data;
-            my $unique_key = shift @{ $self->{pending_acks} } or last READ;
+            my $unique_key = shift @acks;
             if ($unique_key && ref $ack eq "HASH") {
                 if ($ack->{ack} ne $unique_key) {
-                    $self->_carp("Can't send data. ack is not expected: " . $ack->{ack});
+                    die "ack is not expected: " . $ack->{ack};
                 }
             } else {
-                $self->_carp("Can't send data. ack is not expected. $@");
+                unshift @{ $self->{pending_acks} }, $unique_key;
+                die "Can't send data. ack is not expected. $@";
             }
-            last READ if @{ $self->{pending_acks} } == 0;
+            last READ if @acks == 0;
         }
     }
-    return;
+    return 1;
 }
 
 sub _call_buffer_overflow_handler {
@@ -303,12 +323,15 @@ sub _write {
     my $data = shift;
     my $length = length($data);
     my $retry  = my $written = 0;
+    die "Connection is not available" unless $self->socket_io;
 
     local $SIG{"PIPE"} = sub { die $! };
 
     while ($written < $length) {
+        my ($s) = $self->selector->can_write($self->timeout);
+        die "send write timed out" unless $s;
         my $nwrite
-            = $self->socket_io->syswrite($data, $self->write_length, $written);
+            = $s->syswrite($data, $self->write_length, $written);
 
         if (!$nwrite) {
             if ($retry > $self->max_write_retry) {
