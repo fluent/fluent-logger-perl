@@ -1,6 +1,8 @@
 requires 'Data::MessagePack', '0.35_01';
 requires 'Class::Tiny';
 requires 'Time::Piece';
+requires 'Data::MessagePack::Stream';
+requires 'Data::UUID';
 
 on build => sub {
     requires 'Capture::Tiny';
