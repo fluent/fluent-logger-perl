@@ -245,7 +245,9 @@ sub _send {
     my $written;
     eval {
         $written = $self->_write( $self->{pending} );
-        my $acked = $self->_wait_ack(@{ $self->{pending_acks} });
+        my $acked = $self->ack
+            ? $self->_wait_ack(@{ $self->{pending_acks} })
+            : 1;
         if ($written && $acked) {
             $self->{pending} = "";
             $self->{pending_acks} = [];
@@ -276,7 +278,6 @@ sub _send {
 sub _wait_ack {
     my $self = shift;
     my @acks = @_;
-    return 1 unless $self->ack;
 
     my $up = $self->unpacker;
     local $SIG{"PIPE"} = sub { die $! };
