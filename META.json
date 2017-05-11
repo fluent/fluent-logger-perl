@@ -56,6 +56,8 @@
          "requires" : {
             "Class::Tiny" : "0",
             "Data::MessagePack" : "0.35_01",
+            "Data::MessagePack::Stream" : "0",
+            "Data::UUID" : "0",
             "Time::Piece" : "0"
          }
       }

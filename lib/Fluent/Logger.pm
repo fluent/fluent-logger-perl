@@ -404,6 +404,7 @@ create new logger instance.
     buffer_limit                => 'Int':  defualt 8388608 (8MB)
     buffer_overflow_handler     => 'Code': optional
     truncate_buffer_at_overflow => 'Bool': default 0
+    ack                         => 'Bool': default 0
 
 =over 4
 
@@ -421,6 +422,12 @@ A typical use-case for this would be writing to disk or possibly writing to Redi
 When truncate_buffer_at_overflow is true and pending buffer size is larger than buffer_limit, post() returns undef.
 
 Pending buffer still be kept, but last message passed to post() is not sent and not appended to buffer. You may handle the message by other method.
+
+=item ack
+
+post() waits ack response from server for each messages.
+
+An exception will raise if ack is miss match or timed out.
 
 =back
 
