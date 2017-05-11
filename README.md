@@ -44,6 +44,7 @@ Fluent::Logger is a structured event logger for Fluent.
         buffer_limit                => 'Int':  defualt 8388608 (8MB)
         buffer_overflow_handler     => 'Code': optional
         truncate_buffer_at_overflow => 'Bool': default 0
+        ack                         => 'Bool': default 0
 
     - buffer\_overflow\_handler
 
@@ -59,6 +60,12 @@ Fluent::Logger is a structured event logger for Fluent.
         When truncate\_buffer\_at\_overflow is true and pending buffer size is larger than buffer\_limit, post() returns undef.
 
         Pending buffer still be kept, but last message passed to post() is not sent and not appended to buffer. You may handle the message by other method.
+
+    - ack
+
+        post() waits ack response from server for each messages.
+
+        An exception will raise if ack is miss match or timed out.
 
 - **post**($tag:Str, $msg:HashRef)
 

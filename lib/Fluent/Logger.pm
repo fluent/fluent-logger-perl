@@ -6,13 +6,16 @@ use warnings;
 
 our $VERSION = '0.21';
 
+use IO::Select;
 use IO::Socket::INET;
 use IO::Socket::UNIX;
 use Data::MessagePack;
+use Data::MessagePack::Stream;
 use Time::Piece;
 use Carp;
 use Scalar::Util qw/ refaddr /;
 use Time::HiRes qw/ time /;
+use Data::UUID ();
 
 use constant RECONNECT_WAIT           => 0.5;
 use constant RECONNECT_WAIT_INCR_RATE => 1.5;
@@ -20,6 +23,7 @@ use constant RECONNECT_WAIT_MAX       => 60;
 use constant RECONNECT_WAIT_MAX_COUNT => 12;
 
 use constant MP_HEADER_3ELM_ARRAY => "\x93";
+use constant MP_HEADER_4ELM_ARRAY => "\x94";
 use constant MP_HEADER_EVENT_TIME => "\xd7\x00";
 
 use subs 'prefer_integer';
@@ -48,7 +52,16 @@ use Class::Tiny +{
     connect_error_history => sub { +[] },
     owner_pid => sub {},
     event_time => sub { 0 },
+    ack => sub { 0 },
+    pending_acks => sub { +[] },
+    unpacker => sub {
+        Data::MessagePack::Stream->new;
+    },
+    selector => sub { },
 };
+
+my $uuid = Data::UUID->new;
+
 
 sub BUILD {
     my $self = shift;
@@ -73,7 +86,7 @@ sub _carp {
     my $self = shift;
     my $msg  = shift;
     chomp $msg;
-    carp (
+    carp(
         sprintf "%s %s[%s](%s): %s",
         localtime->strftime("%Y-%m-%dT%H:%M:%S%z"),
         ref $self,
@@ -125,6 +138,7 @@ sub _connect {
     }
     $self->connect_error_history([]);
     $self->owner_pid($$);
+    $self->selector(IO::Select->new($sock));
     $self->socket_io($sock);
 }
 
@@ -141,12 +155,13 @@ sub close {
             my $size = length $self->{pending};
             $self->_carp("Can't send pending data. LOST $size bytes.: $@");
             $self->_call_buffer_overflow_handler();
-        }
-        else {
+        } else {
             $self->_carp("pending data was flushed successfully");
         }
     };
     $self->{pending} = "";
+    $self->{pending_acks} = [];
+    delete $self->{selector};
     my $socket = delete $self->{socket_io};
     $socket->close if $socket;
 }
@@ -186,12 +201,23 @@ sub _post {
     $tag = join('.', $self->tag_prefix, $tag) if $self->tag_prefix;
     my $p = $self->packer;
     $self->_send(
-        MP_HEADER_3ELM_ARRAY . $p->pack($tag) . $self->_pack_time($time) . $p->pack($msg)
+        $p->pack($tag),
+        $self->_pack_time($time),
+        $p->pack($msg),
     );
 }
 
 sub _send {
-    my ($self, $data) = @_;
+    my ($self, @args) = @_;
+
+    my ($data, $unique_key);
+    if ( $self->{ack} ) {
+        $unique_key = $uuid->create_b64;
+        $data = join('', MP_HEADER_4ELM_ARRAY, @args, $self->{packer}->pack({ chunk => $unique_key }));
+        push @{$self->{pending_acks}}, $unique_key;
+    } else {
+        $data = join('', MP_HEADER_3ELM_ARRAY, @args);
+    }
 
     my $prev_size = length($self->{pending});
     my $current_size = length($data);
@@ -203,8 +229,7 @@ sub _send {
         my $suppress_sec;
         if ( $errors < RECONNECT_WAIT_MAX_COUNT ) {
             $suppress_sec = RECONNECT_WAIT * (RECONNECT_WAIT_INCR_RATE ** ($errors - 1));
-        }
-        else {
+        } else {
             $suppress_sec = RECONNECT_WAIT_MAX;
         }
         if ( time - $self->connect_error_history->[-1] < $suppress_sec ) {
@@ -220,23 +245,66 @@ sub _send {
     my $written;
     eval {
         $written = $self->_write( $self->{pending} );
-        $self->{pending} = "";
+        my $acked = $self->ack
+            ? $self->_wait_ack(@{ $self->{pending_acks} })
+            : 1;
+        if ($written && $acked) {
+            $self->{pending} = "";
+            $self->{pending_acks} = [];
+        }
     };
     if ($@) {
         my $error = $@;
         $self->_add_error("Cannot send data: $error");
-        delete $self->{socket_io};
+        my $sock = delete $self->{socket_io};
+        $sock->close if $sock;
+        delete $self->{selector};
         if ( length($self->{pending}) > $self->buffer_limit ) {
             if ( defined $self->buffer_overflow_handler ) {
                 $self->_call_buffer_overflow_handler();
                 $self->{pending} = "";
+                $self->{pending_acks} = [] if $self->ack;
             } elsif ( $self->truncate_buffer_at_overflow ) {
                 substr($self->{pending}, $prev_size, $current_size, "");
+                pop @{$self->{pending_acks}} if $self->ack;
             }
         }
         return;
     }
-    $written;
+
+    return $written;
+}
+
+sub _wait_ack {
+    my $self = shift;
+    my @acks = @_;
+
+    my $up = $self->unpacker;
+    local $SIG{"PIPE"} = sub { die $! };
+READ:
+    while (1) {
+        my ($s) = $self->selector->can_read($self->timeout);
+        if (!$s) {
+            die "ack read timed out";
+        }
+        $s->sysread(my $buf, 1024);
+        return if @acks > 0 && length($buf) == 0;
+        $up->feed($buf);
+        while ($up->next) {
+            my $ack = $up->data;
+            my $unique_key = shift @acks;
+            if ($unique_key && ref $ack eq "HASH") {
+                if ($ack->{ack} ne $unique_key) {
+                    die "ack is not expected: " . $ack->{ack};
+                }
+            } else {
+                unshift @{ $self->{pending_acks} }, $unique_key;
+                die "Can't send data. ack is not expected. $@";
+            }
+            last READ if @acks == 0;
+        }
+    }
+    return 1;
 }
 
 sub _call_buffer_overflow_handler {
@@ -256,12 +324,15 @@ sub _write {
     my $data = shift;
     my $length = length($data);
     my $retry  = my $written = 0;
+    die "Connection is not available" unless $self->socket_io;
 
     local $SIG{"PIPE"} = sub { die $! };
 
     while ($written < $length) {
+        my ($s) = $self->selector->can_write($self->timeout);
+        die "send write timed out" unless $s;
         my $nwrite
-            = $self->socket_io->syswrite($data, $self->write_length, $written);
+            = $s->syswrite($data, $self->write_length, $written);
 
         if (!$nwrite) {
             if ($retry > $self->max_write_retry) {
@@ -333,6 +404,7 @@ create new logger instance.
     buffer_limit                => 'Int':  defualt 8388608 (8MB)
     buffer_overflow_handler     => 'Code': optional
     truncate_buffer_at_overflow => 'Bool': default 0
+    ack                         => 'Bool': default 0
 
 =over 4
 
@@ -350,6 +422,12 @@ A typical use-case for this would be writing to disk or possibly writing to Redi
 When truncate_buffer_at_overflow is true and pending buffer size is larger than buffer_limit, post() returns undef.
 
 Pending buffer still be kept, but last message passed to post() is not sent and not appended to buffer. You may handle the message by other method.
+
+=item ack
+
+post() waits ack response from server for each messages.
+
+An exception will raise if ack is miss match or timed out.
 
 =back
 

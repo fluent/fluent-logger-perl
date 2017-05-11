@@ -57,6 +57,24 @@ subtest tcp_event_time => sub {
     like $log => qr/"event_time":"bar","tag":"$tag","time":"\Q$time_str\E"/, "match post_with_time log";
 };
 
+subtest ack => sub {
+    my $logger = Fluent::Logger->new( port => $port, ack => 1 );
+
+    isa_ok $logger, "Fluent::Logger";
+    my $tag = "test.tcp";
+    ok $logger->post( $tag, { "foo" => "bar" }), "post ok";
+
+    my $time     = time - int rand(3600);
+    my $time_str = localtime($time)->strftime("%Y-%m-%dT%H:%M:%S.000000000%z");
+
+    ok $logger->post_with_time( $tag, { "FOO" => "BAR" }, $time ), "post_with_time ok";
+    sleep 1;
+    my $log = slurp_log $dir;
+    note $log;
+    like $log => qr/"foo":"bar","tag":"$tag"/, "match post log";
+    like $log => qr/"FOO":"BAR","tag":"$tag","time":"\Q$time_str\E"/, "match post_with_time log";
+};
+
 subtest error => sub {
     my $logger = Fluent::Logger->new( port => $port );
     ok $logger->post( "test.error" => { foo => "ok" } );
