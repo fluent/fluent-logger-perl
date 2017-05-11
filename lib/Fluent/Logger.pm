@@ -4,7 +4,7 @@ package Fluent::Logger;
 use strict;
 use warnings;
 
-our $VERSION = '0.21';
+our $VERSION = '0.22';
 
 use IO::Select;
 use IO::Socket::INET;
@@ -382,7 +382,7 @@ Fluent::Logger - A structured event logger for Fluent
 
 =head1 DESCRIPTION
 
-Fluent::Logger is a structured event logger for Fluent.
+Fluent::Logger is a structured event logger for Fluentd.
 
 =head1 METHODS
 

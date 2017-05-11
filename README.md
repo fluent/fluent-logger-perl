@@ -24,7 +24,7 @@ Fluent::Logger - A structured event logger for Fluent
 
 # DESCRIPTION
 
-Fluent::Logger is a structured event logger for Fluent.
+Fluent::Logger is a structured event logger for Fluentd.
 
 # METHODS
 

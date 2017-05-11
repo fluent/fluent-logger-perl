@@ -2,6 +2,9 @@ Revision history for Fluent::Logger
 
 {{$NEXT}}
 
+0.22 2017-05-11T03:16:33Z
+  * Add ack option (#22)
+
 0.21 2017-03-23T01:33:19Z
   * Call buffer_overflow_handler at close() (#21 yoheimuta)
 
