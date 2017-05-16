@@ -1,8 +1,11 @@
 requires 'Data::MessagePack', '0.35_01';
 requires 'Class::Tiny';
 requires 'Time::Piece';
-requires 'Data::MessagePack::Stream';
 requires 'Data::UUID';
+
+if ($^O ne 'MSWin32') {
+    requires 'Data::MessagePack::Stream';
+}
 
 on build => sub {
     requires 'Capture::Tiny';

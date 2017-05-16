@@ -10,7 +10,6 @@ use IO::Select;
 use IO::Socket::INET;
 use IO::Socket::UNIX;
 use Data::MessagePack;
-use Data::MessagePack::Stream;
 use Time::Piece;
 use Carp;
 use Scalar::Util qw/ refaddr /;
@@ -55,13 +54,13 @@ use Class::Tiny +{
     ack => sub { 0 },
     pending_acks => sub { +[] },
     unpacker => sub {
+        require Data::MessagePack::Stream;
         Data::MessagePack::Stream->new;
     },
     selector => sub { },
 };
 
 my $uuid = Data::UUID->new;
-
 
 sub BUILD {
     my $self = shift;
@@ -211,7 +210,7 @@ sub _send {
     my ($self, @args) = @_;
 
     my ($data, $unique_key);
-    if ( $self->{ack} ) {
+    if ( $self->ack ) {
         $unique_key = $uuid->create_b64;
         $data = join('', MP_HEADER_4ELM_ARRAY, @args, $self->{packer}->pack({ chunk => $unique_key }));
         push @{$self->{pending_acks}}, $unique_key;
@@ -404,7 +403,7 @@ create new logger instance.
     buffer_limit                => 'Int':  defualt 8388608 (8MB)
     buffer_overflow_handler     => 'Code': optional
     truncate_buffer_at_overflow => 'Bool': default 0
-    ack                         => 'Bool': default 0
+    ack                         => 'Bool': default 0 (not works on MSWin32)
 
 =over 4
 
@@ -428,6 +427,8 @@ Pending buffer still be kept, but last message passed to post() is not sent and 
 post() waits ack response from server for each messages.
 
 An exception will raise if ack is miss match or timed out.
+
+This option does not work on MSWin32 platform currently, because Data::MessagePack::Stream does not work.
 
 =back
 
