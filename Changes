@@ -2,6 +2,9 @@ Revision history for Fluent::Logger
 
 {{$NEXT}}
 
+0.23 2017-05-16T04:12:25Z
+  * Data::MessagePack::Stream(for ack option) is optional (#23 chorny #24)
+
 0.22 2017-05-11T03:16:33Z
   * Add ack option (#22)
 
