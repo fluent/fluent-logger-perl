@@ -57,8 +57,8 @@
             "Class::Tiny" : "0",
             "Data::MessagePack" : "0.35_01",
             "Data::MessagePack::Stream" : "0",
-            "Data::UUID" : "0",
-            "Time::Piece" : "0"
+            "Time::Piece" : "0",
+            "UUID::Tiny" : "0"
          }
       }
    },
@@ -74,7 +74,7 @@
          "web" : "https://github.com/fluent/fluent-logger-perl"
       }
    },
-   "version" : "0.23",
+   "version" : "0.24",
    "x_contributors" : [
       "HIROSE Masaaki <hirose31@gmail.com>",
       "Shinichiro Sei <sei@kayac.com>",
