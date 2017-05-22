@@ -1,7 +1,7 @@
 requires 'Data::MessagePack', '0.35_01';
 requires 'Class::Tiny';
 requires 'Time::Piece';
-requires 'Data::UUID';
+requires 'UUID::Tiny';
 
 if ($^O ne 'MSWin32') {
     requires 'Data::MessagePack::Stream';
