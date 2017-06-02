@@ -1,5 +1,7 @@
 use strict;
 use warnings;
+use FindBin;
+use lib "$FindBin::Bin/../";
 use Test::More;
 use t::Util qw/ run_fluentd /;
 use POSIX qw/ setlocale LC_ALL /;

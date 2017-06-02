@@ -4,7 +4,7 @@
       "HIROSE Masaaki <hirose31 _at_ gmail.com>"
    ],
    "dynamic_config" : 0,
-   "generated_by" : "Minilla/v3.0.4, CPAN::Meta::Converter version 2.150005",
+   "generated_by" : "Minilla/v3.0.11, CPAN::Meta::Converter version 2.150010",
    "license" : [
       "perl_5"
    ],
@@ -93,5 +93,5 @@
       "Alexandr Ciornii <alexchorny@gmail.com>",
       "FUJIWARA Shunichiro <fujiwara.shunichiro@gmail.com>"
    ],
-   "x_serialization_backend" : "JSON::PP version 2.27300"
+   "x_serialization_backend" : "JSON::PP version 2.27400_02"
 }
