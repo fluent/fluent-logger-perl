@@ -1,4 +1,6 @@
 use strict;
+use FindBin;
+use lib "$FindBin::Bin/../";
 use Test::More;
 use Test::SharedFork;
 use File::Temp qw/ tempdir /;
