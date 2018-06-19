@@ -436,7 +436,7 @@ This option does not work on MSWin32 platform currently, because Data::MessagePa
 
 =item retry_immediately
 
-When an error occured in post(), Fluent::Logger will retry to send the buffer at next post() called.
+By default, Fluent::Logger will retry to send the buffer at next post() called when an error occured in post().
 
 If retry_immediately(N) is set, retries immediately max N times.
 
