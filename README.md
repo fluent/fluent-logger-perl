@@ -45,6 +45,7 @@ Fluent::Logger is a structured event logger for Fluentd.
         buffer_overflow_handler     => 'Code': optional
         truncate_buffer_at_overflow => 'Bool': default 0
         ack                         => 'Bool': default 0 (not works on MSWin32)
+        retry_immediately           => 'Int':  default 0 (retries immediately  N times on error occured)
 
     - buffer\_overflow\_handler
 
@@ -68,6 +69,12 @@ Fluent::Logger is a structured event logger for Fluentd.
         An exception will raise if ack is miss match or timed out.
 
         This option does not work on MSWin32 platform currently, because Data::MessagePack::Stream does not work.
+
+    - retry\_immediately
+
+        By default, Fluent::Logger will retry to send the buffer at next post() called when an error occured in post().
+
+        If retry\_immediately(N) is set, retries immediately max N times.
 
 - **post**($tag:Str, $msg:HashRef)
 
