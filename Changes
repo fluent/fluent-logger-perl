@@ -2,7 +2,7 @@ Revision history for Fluent::Logger
 
 {{$NEXT}}
 
-0.26 2018-06-19T07:38:09Z
+0.27 2018-06-19T07:52:56Z
   * Add retry_immediately option (#28)
 
 0.25 2017-06-02T01:41:24Z
