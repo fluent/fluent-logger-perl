@@ -59,6 +59,7 @@ use Class::Tiny +{
         Data::MessagePack::Stream->new;
     },
     selector => sub { },
+    retry_immediately => sub { 0 },
 };
 
 sub BUILD {
@@ -235,28 +236,31 @@ sub _send {
         }
     }
 
-    # fork safe
-    if (!$self->socket_io || $self->owner_pid != $$) {
-        $self->_connect(1);
-    }
-
-    my $written;
-    eval {
-        $written = $self->_write( $self->{pending} );
-        my $acked = $self->ack
-            ? $self->_wait_ack(@{ $self->{pending_acks} })
-            : 1;
-        if ($written && $acked) {
-            $self->{pending} = "";
-            $self->{pending_acks} = [];
+    my ($written, $error);
+    for ( 0 .. $self->retry_immediately ) {
+        # check owner pid for fork safe
+        if (!$self->socket_io || $self->owner_pid != $$) {
+            $self->_connect(1);
         }
-    };
-    if ($@) {
-        my $error = $@;
-        $self->_add_error("Cannot send data: $error");
+        eval {
+            $written = $self->_write( $self->{pending} );
+            my $acked = $self->ack
+                ? $self->_wait_ack(@{ $self->{pending_acks} })
+                : 1;
+            if ($written && $acked) {
+                $self->{pending} = "";
+                $self->{pending_acks} = [];
+            }
+        };
+        if (!$@) {
+            return $written;
+        }
+        my $e = $@;
+        $error = "Cannot send data: $e";
         my $sock = delete $self->{socket_io};
         $sock->close if $sock;
         delete $self->{selector};
+
         if ( length($self->{pending}) > $self->buffer_limit ) {
             if ( defined $self->buffer_overflow_handler ) {
                 $self->_call_buffer_overflow_handler();
@@ -267,9 +271,9 @@ sub _send {
                 pop @{$self->{pending_acks}} if $self->ack;
             }
         }
-        return;
     }
 
+    $self->_add_error($error) if defined $error;
     return $written;
 }
 
@@ -403,6 +407,7 @@ create new logger instance.
     buffer_overflow_handler     => 'Code': optional
     truncate_buffer_at_overflow => 'Bool': default 0
     ack                         => 'Bool': default 0 (not works on MSWin32)
+    retry_immediately           => 'Int':  default 0 (retries immediately  N times on error occured)
 
 =over 4
 
@@ -428,6 +433,12 @@ post() waits ack response from server for each messages.
 An exception will raise if ack is miss match or timed out.
 
 This option does not work on MSWin32 platform currently, because Data::MessagePack::Stream does not work.
+
+=item retry_immediately
+
+When an error occured in post(), Fluent::Logger will retry to send the buffer at next post() called.
+
+If retry_immediately(N) is set, retries immediately max N times.
 
 =back
 
