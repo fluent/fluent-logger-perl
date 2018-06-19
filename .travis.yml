@@ -11,5 +11,5 @@ perl:
   - "5.8"
 before_install:
   - cpanm -nf Proc::Guard Number::Format # for xt/
-  - gem install fluentd --no-document -v '~> 0.12.0'
+  - gem install fluentd --no-document -v '~> 1.0'
 
