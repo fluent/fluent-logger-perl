@@ -24,6 +24,7 @@ jobs:
           cpanm -nf Proc::Guard Number::Format
           gem install fluentd --no-document -v '~> 1.0'
       - name: test
+        run: |
           cpanm --installdeps .
           perl Build.PL
           ./Build
