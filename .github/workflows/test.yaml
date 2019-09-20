@@ -19,6 +19,10 @@ jobs:
         uses: shogo82148/actions-setup-perl@v1
         with:
           perl-version: ${{ matrix.perl }}
+      - name: Setup ruby
+        uses: actions/setup-ruby@v1
+        with:
+          ruby-version: 2.6
       - name: prepare
         run: |
           cpanm -nf Proc::Guard Number::Format
