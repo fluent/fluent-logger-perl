@@ -10,7 +10,7 @@ if ($^O ne 'MSWin32') {
 on build => sub {
     requires 'Capture::Tiny';
     requires 'ExtUtils::MakeMaker', '6.36';
-    requires 'Path::Class';
+    requires 'Path::Tiny';
     requires 'Test::More', '0.88';
     requires 'Test::SharedFork';
     requires 'Test::TCP', '1.3';
