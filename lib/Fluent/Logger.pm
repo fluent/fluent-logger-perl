@@ -4,7 +4,7 @@ package Fluent::Logger;
 use strict;
 use warnings;
 
-our $VERSION = '0.27';
+our $VERSION = '0.28';
 
 use IO::Select;
 use IO::Socket::INET;

@@ -4,7 +4,7 @@
       "HIROSE Masaaki <hirose31 _at_ gmail.com>"
    ],
    "dynamic_config" : 0,
-   "generated_by" : "Minilla/v3.0.11, CPAN::Meta::Converter version 2.150010",
+   "generated_by" : "Minilla/v3.1.4, CPAN::Meta::Converter version 2.150010",
    "license" : [
       "perl_5"
    ],
@@ -74,24 +74,26 @@
          "web" : "https://github.com/fluent/fluent-logger-perl"
       }
    },
-   "version" : "0.27",
+   "version" : "0.28",
    "x_contributors" : [
-      "HIROSE Masaaki <hirose31@gmail.com>",
-      "Shinichiro Sei <sei@kayac.com>",
-      "lestrrat <lestrrat+github@gmail.com>",
-      "koji_magi <kadal_keys@hotmail.co.jp>",
-      "cho45 <cho45@lowreal.net>",
-      "Tomohiro Hosaka <bokutin@bokut.in>",
+      "Alexandr Ciornii <alexchorny@gmail.com>",
       "Brian Fraser <fraserbn@gmail.com>",
-      "Shoichi Kaji <skaji@cpan.org>",
-      "Kiyoto Tamura <me@ktamura.com>",
       "DQNEO <dqneoo@gmail.com>",
+      "FUJIWARA Shunichiro <fujiwara.shunichiro@gmail.com>",
+      "HIROSE Masaaki <hirose31@gmail.com>",
+      "José Joaquín Atria <jjatria@gmail.com>",
+      "Kiyoto Tamura <me@ktamura.com>",
       "Masahiro Nakagawa <repeatedly@gmail.com>",
+      "Shinichiro Sei <sei@kayac.com>",
+      "Shoichi Kaji <skaji@cpan.org>",
       "Tatsuhiko Miyagawa <miyagawa@bulknews.net>",
       "Tokuhiro Matsuno <tokuhirom@gmail.com>",
-      "yoheimuta <yoheimuta@gmail.com>",
-      "Alexandr Ciornii <alexchorny@gmail.com>",
-      "FUJIWARA Shunichiro <fujiwara.shunichiro@gmail.com>"
+      "Tomohiro Hosaka <bokutin@bokut.in>",
+      "cho45 <cho45@lowreal.net>",
+      "koji_magi <kadal_keys@hotmail.co.jp>",
+      "lestrrat <lestrrat+github@gmail.com>",
+      "yoheimuta <yoheimuta@gmail.com>"
    ],
-   "x_serialization_backend" : "JSON::PP version 2.27400_02"
+   "x_serialization_backend" : "JSON::PP version 2.27400_02",
+   "x_static_install" : 1
 }
