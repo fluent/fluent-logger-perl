@@ -2,7 +2,7 @@ package t::Util;
 use strict;
 use warnings;
 use File::Temp qw/ tempdir /;
-use Path::Class qw/ dir /;
+use Path::Tiny qw/ path /;
 use Test::TCP;
 use version;
 
@@ -24,7 +24,7 @@ sub streaming_decode_mp {
 
 sub slurp_log($) {
     my $dir = shift;
-    my @file = grep { !/\.meta$/ } grep { /test\.log/ } dir($dir)->children;
+    my @file = grep { !/\.meta$/ } path($dir)->children( qr/test\.log/ );
     return join("", map { $_->slurp } @file);
 }
 

@@ -30,7 +30,7 @@
          "requires" : {
             "Capture::Tiny" : "0",
             "ExtUtils::MakeMaker" : "6.36",
-            "Path::Class" : "0",
+            "Path::Tiny" : "0.028",
             "Test::More" : "0.88",
             "Test::SharedFork" : "0",
             "Test::TCP" : "1.3",
