@@ -2,6 +2,9 @@ Revision history for Fluent::Logger
 
 {{$NEXT}}
 
+0.29 2024-08-16T03:52:39Z
+  * Set Data::MessagePack->utf8(1) by default (#33,#32 fujiwara, allanoepping)
+
 0.28 2020-04-24T02:55:44Z
   * Switch to Path::Tiny from Path:Class (#30 jjatria)
 

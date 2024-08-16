@@ -74,7 +74,7 @@
          "web" : "https://github.com/fluent/fluent-logger-perl"
       }
    },
-   "version" : "0.28",
+   "version" : "0.29",
    "x_contributors" : [
       "Alexandr Ciornii <alexchorny@gmail.com>",
       "Brian Fraser <fraserbn@gmail.com>",
