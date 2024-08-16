@@ -21,10 +21,10 @@ my $port = $server->port;
 use_ok "Fluent::Logger";
 
 subtest str_bin => sub {
-    my $logger = Fluent::Logger->new( port => $port, utf8 => 0 );
+    my $logger = Fluent::Logger->new( port => $port, utf8 => 1 );
 
     isa_ok $logger, "Fluent::Logger";
-    is $logger->packer->get_utf8, 0, "packer utf8 is off";
+    is $logger->packer->get_utf8, 1, "packer utf8 is on";
     my $tag = "test.tcp";
     ok $logger->post( $tag, { "foo" => decode_utf8("内部文字列") }), "post str ok";
     ok $logger->post( $tag, { "bar" => "バイナリ列" }), "post bin ok";

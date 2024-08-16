@@ -40,6 +40,7 @@ Fluent::Logger is a structured event logger for Fluentd.
         timeout                     => 'Num':  default is 3.0
         socket                      => 'Str':  default undef (e.g. "/var/run/fluent/fluent.sock")
         prefer_integer              => 'Bool': default 1 (set to Data::MessagePack->prefer_integer)
+        utf8                        => 'Bool': default 1 (set to Data::MessagePack->utf8)
         event_time                  => 'Bool': default 0 (timestamp includes nanoseconds, supported by fluentd >= 0.14.0)
         buffer_limit                => 'Int':  defualt 8388608 (8MB)
         buffer_overflow_handler     => 'Code': optional

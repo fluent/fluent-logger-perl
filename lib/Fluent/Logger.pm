@@ -42,9 +42,11 @@ use Class::Tiny +{
     socket_io => sub {},
     errors => sub { [] },
     prefer_integer => sub { 1 },
+    utf8 => sub { 1 },
     packer => sub {
         my $self = shift;
         my $mp   = Data::MessagePack->new;
+        $mp->utf8( $self->utf8 );
         $mp->prefer_integer( $self->prefer_integer );
         $mp;
     },
@@ -402,6 +404,7 @@ create new logger instance.
     timeout                     => 'Num':  default is 3.0
     socket                      => 'Str':  default undef (e.g. "/var/run/fluent/fluent.sock")
     prefer_integer              => 'Bool': default 1 (set to Data::MessagePack->prefer_integer)
+    utf8                        => 'Bool': default 1 (set to Data::MessagePack->utf8)
     event_time                  => 'Bool': default 0 (timestamp includes nanoseconds, supported by fluentd >= 0.14.0)
     buffer_limit                => 'Int':  defualt 8388608 (8MB)
     buffer_overflow_handler     => 'Code': optional
