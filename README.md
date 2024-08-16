@@ -1,5 +1,4 @@
-[![Build Status](https://github.com/fluent/fluent-logger-perl/actions/workflows/test.yaml/badge.svg)](https://github.com/fluent/fluent-logger-perl/actions/workflows/test.yaml)
-
+[![Actions Status](https://github.com/fluent/fluent-logger-perl/workflows/test/badge.svg)](https://github.com/fluent/fluent-logger-perl/actions)
 # NAME
 
 Fluent::Logger - A structured event logger for Fluent

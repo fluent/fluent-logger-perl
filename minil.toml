@@ -1,2 +1,2 @@
+badges = ["github-actions"]
 name = "Fluent-Logger"
-badges = ["travis"]
