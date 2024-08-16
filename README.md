@@ -1,4 +1,5 @@
-[![Build Status](https://travis-ci.org/fluent/fluent-logger-perl.svg?branch=master)](https://travis-ci.org/fluent/fluent-logger-perl)
+![Build Status](https://github.com/fluent/fluent-logger-perl/actions/workflows/test.yaml/badge.svg)
+
 # NAME
 
 Fluent::Logger - A structured event logger for Fluent
