@@ -1,4 +1,4 @@
-![Build Status](https://github.com/fluent/fluent-logger-perl/actions/workflows/test.yaml/badge.svg)
+[![Build Status](https://github.com/fluent/fluent-logger-perl/actions/workflows/test.yaml/badge.svg)](https://github.com/fluent/fluent-logger-perl/actions/workflows/test.yaml)
 
 # NAME
 
