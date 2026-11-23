@@ -1,6 +1,10 @@
 Revision history for Fluent::Logger
 
 {{$NEXT}}
+  * Always pack a tag as a msgpack str. A numeric-looking tag was packed as
+    an integer with prefer_integer (Fluentd >= 1.19 drops such events), and
+    any tag was packed as a bin with utf8 => 0.
+  * Fix tests for Fluentd 1.20.1 or later
 
 0.29 2024-08-16T03:52:39Z
   * Set Data::MessagePack->utf8(1) by default (#33,#32 fujiwara, allanoepping)
