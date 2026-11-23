@@ -1,6 +1,8 @@
 Revision history for Fluent::Logger
 
 {{$NEXT}}
+
+0.30 2026-11-23T09:20:24Z
   * Always pack a tag as a msgpack str. A numeric-looking tag was packed as
     an integer with prefer_integer (Fluentd >= 1.19 drops such events), and
     any tag was packed as a bin with utf8 => 0.
