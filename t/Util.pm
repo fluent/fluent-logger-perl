@@ -31,6 +31,7 @@ sub slurp_log($) {
 sub run_fluentd {
     my $fixed_port = shift;
     my $input = shift || "forward";
+    my $format = shift || "json";
     my ($v) = ( `fluentd --version` =~ /^fluentd ([0-9.]+)/ );
     if (!$v) {
         Test::More::plan skip_all => "fluentd is not installed.";
@@ -74,7 +75,7 @@ _END_
   time_format %Y-%m-%dT%H:%M:%S.%N%z
   include_time_key true
   include_tag_key true
-  format json
+  format ${format}
 </match>
 _END_
         exec "fluentd",
